@@ -5,13 +5,8 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path: '/',
-      name: 'home',
-      component: HomeView,
-    },
-    {
       path: '/home',
-      name: 'home-alt',
+      name: 'home',
       component: HomeView,
     },
     {
@@ -30,6 +25,16 @@ const router = createRouter({
       component: () => import('../views/ExchangesView.vue'),
     },
     {
+      path: "/friends",
+      name: 'friends',
+      component: () => import('../views/FriendsView.vue'),
+    },
+    {
+      path: "/messages",
+      name: 'messages',
+      component: () => import('../views/MessagesView.vue'),
+    },
+    {
       path: '/about',
       name: 'about',
       component: () => import('../views/AboutView.vue'),
@@ -38,6 +43,11 @@ const router = createRouter({
       path: '/register',
       name: 'register',
       component: () => import('../views/Register.vue'),
+    },
+    {
+      path: '/login',
+      name: 'login',
+      component: () => import('../views/LoginView.vue'),
     },
     {
       path: '/profile',
@@ -50,6 +60,19 @@ const router = createRouter({
       component: () => import('../views/SettingsView.vue'),
     },
   ],
+})
+
+router.beforeEach((to, from, next) => {
+  const token = localStorage.getItem("token")
+
+  const publicPages = ["/", "/login", "/register"]
+  const authRequired = !publicPages.includes(to.path)
+
+  if (authRequired && !token) {
+    next("/login")
+  } else {
+    next()
+  }
 })
 
 export default router

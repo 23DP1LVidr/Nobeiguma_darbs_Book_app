@@ -1,286 +1,657 @@
 <template>
-  <v-app>
-    <!-- Top Navigation Bar -->
-    <v-app-bar color="white" elevation="1" class="px-4">
+  <div class="library-page">
+    <v-app-bar elevation="1" class="px-4 app-header">
       <div class="d-flex align-center" style="width: 280px;">
         <router-link to="/main" class="text-decoration-none">
           <h1 class="text-h5 font-weight-bold text-primary">BookSwap</h1>
         </router-link>
       </div>
 
-      <!-- Search Bar -->
-      <v-text-field
-        v-model="globalSearch"
-        placeholder="Meklēt grāmatas, lietotājus..."
-        prepend-inner-icon="mdi-magnify"
-        variant="outlined"
-        density="compact"
-        hide-details
-        single-line
-        class="mx-4"
-        style="max-width: 400px;"
-        bg-color="grey-lighten-4"
-      ></v-text-field>
+      <v-spacer />
 
-      <v-spacer></v-spacer>
-
-      <!-- Nav Icons -->
-      <v-btn icon variant="text" class="mr-1" href="/main">
-        <v-icon>mdi-home</v-icon>
-      </v-btn>
-      <v-btn icon variant="text" class="mr-1" href="/library">
-        <v-icon>mdi-book-open-variant</v-icon>
-      </v-btn>
-      <v-btn icon variant="text" class="mr-1" href="/exchanges">
-        <v-icon>mdi-swap-horizontal</v-icon>
-      </v-btn>
-      <v-btn icon variant="text" class="mr-1">
-        <v-icon>mdi-bell-outline</v-icon>
-      </v-btn>
-      
-      <!-- User Avatar -->
-      <v-avatar size="36" color="primary" class="ml-2" @click="showUserMenu = !showUserMenu" style="cursor: pointer;">
-        <span class="text-white text-caption">JD</span>
-      </v-avatar>
+      <router-link to="/profile" class="text-decoration-none">
+        <v-avatar size="36" color="primary" class="ml-2" style="cursor:pointer;">
+          <v-img v-if="user?.avatar" :src="user.avatar" />
+          <span v-else class="text-white text-caption">{{ initials }}</span>
+        </v-avatar>
+      </router-link>
     </v-app-bar>
 
-    <v-main>
-      <v-container fluid class="bg-grey-lighten-5 pa-0">
-        <v-container class="py-6" style="max-width: 1200px;">
-          
-          <v-row>
-            <!-- Left Sidebar -->
-            <v-col cols="12" md="3" class="d-none d-md-block">
-              <v-card rounded="xl" elevation="0" class="pa-4 mb-4" color="transparent">
-                <div class="d-flex align-center mb-4">
-                  <v-avatar size="48" color="primary" class="mr-3">
-                    <span class="text-white">JD</span>
-                  </v-avatar>
-                  <div>
-                    <div class="text-subtitle-1 font-weight-bold">Jānis Daugulis</div>
-                    <div class="text-caption text-medium-emphasis">12 grāmatas</div>
+    <v-container fluid class="pa-0 page-content">
+      <v-container class="py-6" style="max-width: 1200px;">
+        <v-row>
+          <v-col cols="12" md="3" class="d-none d-md-block">
+            <v-card rounded="xl" elevation="0" class="pa-4 mb-4 panel-card">
+              <div class="d-flex align-center mb-4">
+                <v-avatar size="48" color="primary" class="mr-3">
+                  <v-img v-if="user?.avatar" :src="user.avatar" />
+                  <span v-else class="text-white">{{ initials }}</span>
+                </v-avatar>
+
+                <div>
+                  <div class="text-subtitle-1 font-weight-bold">
+                    {{ user?.name }} {{ user?.surname }}
+                  </div>
+                  <div class="text-caption text-medium-emphasis">
+                    @{{ user?.username }}
                   </div>
                 </div>
-                <v-divider class="mb-3"></v-divider>
-                <v-list density="compact" bg-color="transparent">
-                  <v-list-item prepend-icon="mdi-home" title="Sākums" value="home" href="/main"></v-list-item>
-                  <v-list-item prepend-icon="mdi-book-open-variant" title="Mana bibliotēka" value="library" href="/library" active-color="primary"></v-list-item>
-                  <v-list-item prepend-icon="mdi-swap-horizontal" title="Manas apmaiņas" value="swaps" href="/exchanges"></v-list-item>
-                  <v-list-item prepend-icon="mdi-message-text" title="Ziņas" value="messages"></v-list-item>
-                  <v-list-item prepend-icon="mdi-account-group" title="Draugi" value="friends"></v-list-item>
-                </v-list>
-              </v-card>
-
-              <!-- Categories -->
-              <v-card rounded="xl" elevation="0" class="pa-4" color="transparent">
-                <div class="text-subtitle-2 font-weight-bold mb-3">Kategorijas</div>
-                <v-list density="compact" bg-color="transparent">
-                  <v-list-item prepend-icon="mdi-star" title="Favorīti" value="favorites"></v-list-item>
-                  <v-list-item prepend-icon="mdi-clock-outline" title="Lasīšanā" value="reading"></v-list-item>
-                  <v-list-item prepend-icon="mdi-check-all" title="Izlasīts" value="read"></v-list-item>
-                  <v-list-item prepend-icon="mdi-swap-horizontal" title="Apmaiņai" value="exchange"></v-list-item>
-                </v-list>
-              </v-card>
-            </v-col>
-
-            <!-- Main Content -->
-            <v-col cols="12" md="6">
-              <!-- Header -->
-              <div class="d-flex justify-space-between align-center mb-6">
-                <div>
-                  <h1 class="text-h4 font-weight-bold">Mana bibliotēka</h1>
-                  <p class="text-body-1 text-medium-emphasis">Jūsu personīgais grāmatu krājums</p>
-                </div>
-                <v-btn color="primary" prepend-icon="mdi-plus">
-                  Pievienot grāmatu
-                </v-btn>
               </div>
 
-              <!-- Stats Cards -->
+              <v-divider class="mb-3" />
 
-              <!-- Filter Tabs -->
-              <v-tabs v-model="activeFilter" color="primary" class="mb-4">
-                <v-tab value="all">Visas</v-tab>
-                <v-tab value="reading">Lasīšanā</v-tab>
-                <v-tab value="read">Izlasīts</v-tab>
-                <v-tab value="exchange">Apmaiņai</v-tab>
-                <v-tab value="favorites">Favorīti</v-tab>
-              </v-tabs>
+              <v-list density="compact" bg-color="transparent" nav>
+                <v-list-item prepend-icon="mdi-home" title="Sākums" to="/main" />
+                <v-list-item prepend-icon="mdi-book-open-variant" title="Mana bibliotēka" to="/library" />
+                <v-list-item prepend-icon="mdi-swap-horizontal" title="Manas apmaiņas" to="/exchanges" />
+                <v-list-item prepend-icon="mdi-message-text" title="Ziņas" to="/messages" />
+                <v-list-item prepend-icon="mdi-account-group" title="Draugi" to="/friends" />
+                <v-list-item prepend-icon="mdi-cog" title="Iestatījumi" to="/settings" />
+                <v-list-item prepend-icon="mdi-logout" title="Izrakstīties" @click="logoutUser" />
+              </v-list>
+            </v-card>
+          </v-col>
 
-              <!-- Books Grid -->
+          <v-col cols="12" md="6">
+            <div class="d-flex justify-space-between align-center mb-6">
+              <div>
+                <h1 class="text-h4 font-weight-bold">Mana bibliotēka</h1>
+                <p class="text-body-1 text-medium-emphasis">
+                  Jūsu personīgais grāmatu krājums
+                </p>
+              </div>
+
+              <v-btn color="primary" prepend-icon="mdi-plus" @click="showAddBookDialog = true">
+                Pievienot grāmatu
+              </v-btn>
+            </div>
+
+            <v-card rounded="xl" elevation="0" class="pa-4 mb-4 content-card">
+              <v-text-field
+                v-model="bookSearch"
+                placeholder="Meklēt pēc nosaukuma vai autora..."
+                prepend-inner-icon="mdi-magnify"
+                variant="outlined"
+                density="compact"
+                hide-details
+                class="mb-4"
+              />
+
               <v-row>
-                <v-col cols="12" sm="6" md="4" v-for="book in filteredBooks" :key="book.id">
-                  <v-card rounded="xl" elevation="2" class="pa-4 h-100">
-                    <div class="d-flex flex-column h-100">
-                      <v-img
-                        :src="book.cover"
-                        aspect-ratio="0.7"
-                        class="rounded-lg mb-3"
-                        cover
-                      ></v-img>
-                      <div class="flex-grow-1">
-                        <div class="text-subtitle-1 font-weight-bold mb-1">{{ book.title }}</div>
-                        <div class="text-body-2 text-medium-emphasis mb-2">{{ book.author }}</div>
-                        <div class="d-flex gap-2 mb-2">
-                          <v-chip size="x-small" :color="getStatusColor(book.status)">{{ book.status }}</v-chip>
-                          <v-chip size="x-small" v-if="book.rating" color="amber" variant="tonal">
-                            <v-icon size="x-small" start>mdi-star</v-icon>
-                            {{ book.rating }}
-                          </v-chip>
-                        </div>
-                      </div>
-                      <div class="d-flex justify-space-between mt-auto">
-                        <v-btn size="small" variant="text" prepend-icon="mdi-pencil">Redigēt</v-btn>
-                        <v-btn size="small" variant="text" color="primary" prepend-icon="mdi-swap-horizontal">Mainīt</v-btn>
-                      </div>
-                    </div>
-                  </v-card>
+                <v-col cols="12" sm="8">
+                  <v-select
+                    v-model="sortMode"
+                    :items="sortOptions"
+                    label="Kārtot pēc"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                  />
+                </v-col>
+
+                <v-col cols="12" sm="4">
+                  <v-btn
+                    block
+                    variant="outlined"
+                    height="40"
+                    :prepend-icon="sortDirection === 'asc' ? 'mdi-sort-ascending' : 'mdi-sort-descending'"
+                    @click="toggleSortDirection"
+                  >
+                    {{ sortDirection === "asc" ? "A-Z" : "Z-A" }}
+                  </v-btn>
                 </v-col>
               </v-row>
+            </v-card>
 
-              <!-- Add Book Card -->
-              <v-row>
-                <v-col cols="12" sm="6" md="4">
-                  <v-card rounded="xl" elevation="0" class="pa-4 h-100 d-flex align-center justify-center" 
-                          style="border: 2px dashed grey; min-height: 300px; cursor: pointer;">
-                    <div class="text-center">
-                      <v-icon size="48" color="grey">mdi-plus</v-icon>
-                      <div class="text-body-1 text-medium-emphasis mt-2">Pievienot grāmatu</div>
+            <div v-if="loadingBooks" class="text-center py-10">
+              <v-progress-circular indeterminate color="primary" />
+            </div>
+
+            <div v-else-if="filteredBooks.length === 0" class="text-center py-10">
+              <v-icon size="56" color="grey">mdi-book-open-page-variant</v-icon>
+              <div class="text-h6 mt-3">Nav atrastu grāmatu</div>
+              <div class="text-body-2 text-medium-emphasis mb-4">
+                Pievieno grāmatu vai maini meklēšanas/filtra iestatījumus.
+              </div>
+              <v-btn color="primary" prepend-icon="mdi-plus" @click="showAddBookDialog = true">
+                Pievienot grāmatu
+              </v-btn>
+            </div>
+
+            <v-row v-else>
+              <v-col
+                v-for="book in filteredBooks"
+                :key="book.id"
+                cols="12"
+                sm="6"
+                md="4"
+              >
+                <v-card rounded="xl" elevation="2" class="pa-4 h-100 book-card">
+                  <div class="d-flex flex-column h-100">
+                    <v-img
+                      v-if="book.image"
+                      :src="book.image"
+                      aspect-ratio="0.7"
+                      class="rounded-lg mb-3"
+                      cover
+                    />
+
+                    <div
+                      v-else
+                      class="rounded-lg mb-3 d-flex align-center justify-center"
+                      style="height: 220px; background: rgba(var(--v-theme-on-surface), 0.06);"
+                    >
+                      <v-icon size="48">mdi-book-open-page-variant</v-icon>
                     </div>
-                  </v-card>
-                </v-col>
-              </v-row>
-            </v-col>
 
-            <!-- Right Sidebar -->
-            <v-col cols="12" md="3" class="d-none d-md-block">
-              <!-- Recent Activity -->
-              <v-card rounded="xl" elevation="0" class="pa-4" color="transparent">
-                <div class="text-subtitle-1 font-weight-bold mb-3">Nesenā aktivitāte</div>
-                
-                <v-timeline density="compact" side="end">
-                  <v-timeline-item dot-color="primary" size="x-small">
-                    <div class="text-body-2">Pievantoji "Prāts bez robežām"</div>
-                    <div class="text-caption text-medium-emphasis">Vakar</div>
-                  </v-timeline-item>
-                  <v-timeline-item dot-color="success" size="x-small">
-                    <div class="text-body-2">Pabeidzi lasīt "Mērnieks"</div>
-                    <div class="text-caption text-medium-emphasis">3 dienas atpakaļ</div>
-                  </v-timeline-item>
-                  <v-timeline-item dot-color="warning" size="x-small">
-                    <div class="text-body-2">Ieliki apmaiņai "Čempionu brokastis"</div>
-                    <div class="text-caption text-medium-emphasis">Nedēļu atpakaļ</div>
-                  </v-timeline-item>
-                </v-timeline>
-              </v-card>
-            </v-col>
-          </v-row>
+                    <div class="flex-grow-1">
+                      <div class="text-subtitle-1 font-weight-bold mb-1">
+                        {{ book.title }}
+                      </div>
 
-        </v-container>
+                      <div class="text-body-2 text-medium-emphasis mb-2">
+                        {{ book.author }}
+                      </div>
+
+                      <div class="d-flex gap-2 mb-2 flex-wrap">
+                        <v-chip v-if="book.genre" size="x-small" color="primary" variant="tonal">
+                          {{ book.genre }}
+                        </v-chip>
+
+                        <v-chip
+                          v-if="book.condition"
+                          size="x-small"
+                          :color="getConditionColor(book.condition)"
+                          variant="tonal"
+                        >
+                          {{ book.condition }}
+                        </v-chip>
+                      </div>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2 mt-auto">
+                      <v-btn size="small" variant="text" prepend-icon="mdi-pencil" @click="openEditDialog(book)">
+                        Rediģēt
+                      </v-btn>
+
+                      <v-btn
+                        size="small"
+                        variant="text"
+                        color="error"
+                        prepend-icon="mdi-delete"
+                        @click="deleteBook(book.id)"
+                      >
+                        Dzēst
+                      </v-btn>
+                    </div>
+                  </div>
+                </v-card>
+              </v-col>
+
+              <v-col cols="12" sm="6" md="4">
+                <v-card
+                  rounded="xl"
+                  elevation="0"
+                  class="pa-4 h-100 d-flex align-center justify-center add-card"
+                  @click="showAddBookDialog = true"
+                >
+                  <div class="text-center">
+                    <v-icon size="48" color="grey">mdi-plus</v-icon>
+                    <div class="text-body-1 text-medium-emphasis mt-2">
+                      Pievienot grāmatu
+                    </div>
+                  </div>
+                </v-card>
+              </v-col>
+            </v-row>
+          </v-col>
+
+          <v-col cols="12" md="3" class="d-none d-md-block">
+            <v-card rounded="xl" elevation="0" class="pa-4 panel-card">
+              <div class="text-subtitle-1 font-weight-bold mb-3">Nesenā aktivitāte</div>
+
+              <v-timeline density="compact" side="end">
+                <v-timeline-item dot-color="primary" size="x-small">
+                  <div class="text-body-2">Bibliotēka atjaunināta</div>
+                  <div class="text-caption text-medium-emphasis">Nesen</div>
+                </v-timeline-item>
+              </v-timeline>
+            </v-card>
+          </v-col>
+        </v-row>
       </v-container>
-    </v-main>
-  </v-app>
+    </v-container>
+
+    <v-dialog v-model="showAddBookDialog" max-width="520">
+      <v-card rounded="xl" class="pa-6 content-card">
+        <div class="text-h6 font-weight-bold mb-4">Pievienot grāmatu</div>
+
+        <v-text-field v-model="newBook.title" label="Nosaukums" variant="outlined" class="mb-3" />
+        <v-text-field v-model="newBook.author" label="Autors" variant="outlined" class="mb-3" />
+
+        <v-select v-model="newBook.genre" :items="genres" label="Žanrs" variant="outlined" class="mb-3" />
+        <v-select v-model="newBook.condition" :items="conditions" label="Stāvoklis" variant="outlined" class="mb-3" />
+
+        <v-file-input
+          v-model="newBook.imageFile"
+          label="Grāmatas attēls"
+          accept="image/*"
+          prepend-icon="mdi-image"
+          show-size
+          class="mb-3"
+        />
+
+        <v-img v-if="imagePreview" :src="imagePreview" height="160" class="rounded mb-3" cover />
+
+        <div class="d-flex justify-end mt-4">
+          <v-btn variant="text" class="mr-2" @click="closeAddBookDialog">
+            Atcelt
+          </v-btn>
+
+          <v-btn color="primary" :loading="savingBook" @click="addBook">
+            Saglabāt
+          </v-btn>
+        </div>
+      </v-card>
+    </v-dialog>
+
+    <v-dialog v-model="showEditDialog" max-width="520">
+      <v-card rounded="xl" class="pa-6 content-card">
+        <div class="text-h6 font-weight-bold mb-4">Rediģēt grāmatu</div>
+
+        <v-text-field v-model="editBook.title" label="Nosaukums" variant="outlined" class="mb-3" />
+        <v-text-field v-model="editBook.author" label="Autors" variant="outlined" class="mb-3" />
+
+        <v-select v-model="editBook.genre" :items="genres" label="Žanrs" variant="outlined" class="mb-3" />
+        <v-select v-model="editBook.condition" :items="conditions" label="Stāvoklis" variant="outlined" class="mb-3" />
+
+        <v-file-input
+          v-model="editBook.imageFile"
+          label="Grāmatas attēls"
+          accept="image/*"
+          prepend-icon="mdi-image"
+          show-size
+          class="mb-3"
+        />
+
+        <v-img v-if="editImagePreview" :src="editImagePreview" height="160" class="rounded mb-3" cover />
+
+        <div class="d-flex justify-end mt-4">
+          <v-btn variant="text" class="mr-2" @click="showEditDialog = false">
+            Atcelt
+          </v-btn>
+
+          <v-btn color="primary" :loading="savingEdit" @click="updateBook">
+            Saglabāt
+          </v-btn>
+        </div>
+      </v-card>
+    </v-dialog>
+
+    <v-snackbar v-model="showSnackbar" :color="snackbarColor" timeout="3000">
+      {{ snackbarMessage }}
+    </v-snackbar>
+  </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from "vue"
+import axios from "axios"
+import { useRouter } from "vue-router"
 
-const globalSearch = ref('')
-const activeFilter = ref('all')
-const showUserMenu = ref(false)
+const router = useRouter()
 
-const books = ref([
-  {
-    id: 1,
-    title: 'Pērkoņa zirgs',
-    author: 'Ainažu Frics',
-    cover: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=300',
-    status: 'Lasīšanā',
-    rating: 4,
-    progress: 65
-  },
-  {
-    id: 2,
-    title: '1984',
-    author: 'Džordžs Orvels',
-    cover: 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=300',
-    status: 'Lasīšanā',
-    rating: 5,
-    progress: 30
-  },
-  {
-    id: 3,
-    title: 'Melu anatomija',
-    author: 'Māra Bērziņa',
-    cover: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=300',
-    status: 'Lasīšanā',
-    rating: null,
-    progress: 80
-  },
-  {
-    id: 4,
-    title: 'Mērnieks',
-    author: 'Kārlis Skalbe',
-    cover: 'https://images.unsplash.com/photo-1476275466078-4007374efbbe?w=300',
-    status: 'Izlasīts',
-    rating: 5,
-    progress: 100
-  },
-  {
-    id: 5,
-    title: 'Staburadis',
-    author: 'Vilis Kadēns',
-    cover: 'https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=300',
-    status: 'Izlasīts',
-    rating: 4,
-    progress: 100
-  },
-  {
-    id: 6,
-    title: 'Čempionu brokastis',
-    author: 'Džefs Kinels',
-    cover: 'https://images.unsplash.com/photo-1589829085413-56de8ae18c73?w=300',
-    status: 'Apmaiņai',
-    rating: null,
-    progress: 0
-  },
-  {
-    id: 7,
-    title: 'Prāts bez robežām',
-    author: 'Deivids Dočs',
-    cover: 'https://images.unsplash.com/photo-1532012197267-da84d127e765?w=300',
-    status: 'Apmaiņai',
-    rating: null,
-    progress: 0
-  },
-  {
-    id: 8,
-    title: 'Zaļā mile',
-    author: 'Ainažu Frics',
-    cover: 'https://images.unsplash.com/photo-1516979187457-637abb4f9353?w=300',
-    status: 'Favorīts',
-    rating: 5,
-    progress: 100
-  }
-])
+const user = ref(JSON.parse(localStorage.getItem("user")) || null)
 
-const filteredBooks = computed(() => {
-  if (activeFilter.value === 'all') return books.value
-  return books.value.filter(b => b.status.toLowerCase() === activeFilter.value.toLowerCase())
+const initials = computed(() => {
+  const nameInitial = user.value?.name?.[0] || ""
+  const surnameInitial = user.value?.surname?.[0] || ""
+  return `${nameInitial}${surnameInitial}`.toUpperCase() || "U"
 })
 
-function getStatusColor(status) {
-  const colors = {
-    'Lasīšanā': 'primary',
-    'Izlasīts': 'success',
-    'Apmaiņai': 'warning',
-    'Favorīts': 'error'
+function logoutUser() {
+  localStorage.removeItem("token")
+  localStorage.removeItem("user")
+  router.replace("/login")
+}
+
+const API_URL = "http://127.0.0.1:8000/api"
+
+function authHeaders() {
+  return {
+    Authorization: `Bearer ${localStorage.getItem("token")}`,
   }
-  return colors[status] || 'grey'
+}
+
+const books = ref([])
+const loadingBooks = ref(false)
+
+const bookSearch = ref("")
+const sortMode = ref("alphabetic")
+const sortDirection = ref("asc")
+const conditionFilter = ref("all")
+
+const sortOptions = [
+  { title: "Alfabētiski", value: "alphabetic" },
+  { title: "Pēc stāvokļa", value: "condition" },
+]
+
+function toggleSortDirection() {
+  sortDirection.value = sortDirection.value === "asc" ? "desc" : "asc"
+}
+
+const showSnackbar = ref(false)
+const snackbarMessage = ref("")
+const snackbarColor = ref("success")
+
+const genres = [
+  "Fantāzija",
+  "Romāns",
+  "Detektīvs",
+  "Zinātne",
+  "Pašpalīdzība",
+  "Dzeja",
+  "Klasika",
+  "Vēsture",
+  "Biogrāfija",
+]
+
+const conditions = [
+  "Jauna",
+  "Labā stāvoklī",
+  "Vidējā stāvoklī",
+  "Sliktā stāvoklī",
+]
+
+const showAddBookDialog = ref(false)
+const savingBook = ref(false)
+const imagePreview = ref(null)
+
+const newBook = ref({
+  title: "",
+  author: "",
+  genre: "",
+  condition: "",
+  image: "",
+  imageFile: null,
+})
+
+const showEditDialog = ref(false)
+const savingEdit = ref(false)
+const editImagePreview = ref(null)
+
+const editBook = ref({
+  id: null,
+  title: "",
+  author: "",
+  genre: "",
+  condition: "",
+  image: "",
+  imageFile: null,
+})
+
+const conditionOrder = {
+  "Jauna": 1,
+  "Labā stāvoklī": 2,
+  "Vidējā stāvoklī": 3,
+  "Sliktā stāvoklī": 4,
+}
+
+const filteredBooks = computed(() => {
+  let result = [...books.value]
+
+  const search = bookSearch.value.trim().toLowerCase()
+
+  if (search) {
+    result = result.filter((book) => {
+      return (
+        book.title?.toLowerCase().includes(search) ||
+        book.author?.toLowerCase().includes(search)
+      )
+    })
+  }
+
+  result.sort((a, b) => {
+    let comparison = 0
+
+    if (sortMode.value === "alphabetic") {
+      comparison = (a.title || "").localeCompare(b.title || "", "lv")
+    }
+
+    if (sortMode.value === "condition") {
+      comparison =
+        (conditionOrder[a.condition] || 999) -
+        (conditionOrder[b.condition] || 999)
+    }
+
+    return sortDirection.value === "asc" ? comparison : -comparison
+  })
+
+  return result
+})
+
+onMounted(() => {
+  fetchBooks()
+})
+
+async function fetchBooks() {
+  loadingBooks.value = true
+
+  try {
+    const response = await axios.get(`${API_URL}/books`, {
+      headers: authHeaders(),
+    })
+
+    books.value = response.data
+  } catch (error) {
+    console.error(error)
+    showMessage("Neizdevās ielādēt grāmatas.", "error")
+  } finally {
+    loadingBooks.value = false
+  }
+}
+
+async function addBook() {
+  if (!newBook.value.title || !newBook.value.author) {
+    showMessage("Nosaukums un autors ir obligāti.", "error")
+    return
+  }
+
+  savingBook.value = true
+
+  try {
+    await axios.post(
+      `${API_URL}/books`,
+      {
+        title: newBook.value.title,
+        author: newBook.value.author,
+        genre: newBook.value.genre,
+        condition: newBook.value.condition,
+        image: newBook.value.image,
+      },
+      {
+        headers: authHeaders(),
+      }
+    )
+
+    closeAddBookDialog()
+    await fetchBooks()
+    showMessage("Grāmata pievienota.", "success")
+  } catch (error) {
+    console.error("Book save error:", error.response?.data || error)
+    showMessage(error.response?.data?.message || "Neizdevās saglabāt grāmatu.", "error")
+  } finally {
+    savingBook.value = false
+  }
+}
+
+function closeAddBookDialog() {
+  showAddBookDialog.value = false
+
+  newBook.value = {
+    title: "",
+    author: "",
+    genre: "",
+    condition: "",
+    image: "",
+    imageFile: null,
+  }
+
+  imagePreview.value = null
+}
+
+watch(
+  () => newBook.value.imageFile,
+  (file) => {
+    if (!file) return
+
+    const selected = Array.isArray(file) ? file[0] : file
+    if (!selected) return
+
+    const reader = new FileReader()
+
+    reader.onload = (e) => {
+      imagePreview.value = e.target.result
+      newBook.value.image = e.target.result
+    }
+
+    reader.readAsDataURL(selected)
+  }
+)
+
+function openEditDialog(book) {
+  editBook.value = {
+    id: book.id,
+    title: book.title,
+    author: book.author,
+    genre: book.genre,
+    condition: book.condition,
+    image: book.image,
+    imageFile: null,
+  }
+
+  editImagePreview.value = book.image
+  showEditDialog.value = true
+}
+
+async function updateBook() {
+  if (!editBook.value.title || !editBook.value.author) {
+    showMessage("Nosaukums un autors ir obligāti.", "error")
+    return
+  }
+
+  savingEdit.value = true
+
+  try {
+    await axios.put(
+      `${API_URL}/books/${editBook.value.id}`,
+      {
+        title: editBook.value.title,
+        author: editBook.value.author,
+        genre: editBook.value.genre,
+        condition: editBook.value.condition,
+        image: editBook.value.image,
+      },
+      {
+        headers: authHeaders(),
+      }
+    )
+
+    showEditDialog.value = false
+    await fetchBooks()
+    showMessage("Grāmata atjaunināta.", "success")
+  } catch (error) {
+    console.error(error)
+    showMessage("Neizdevās atjaunināt grāmatu.", "error")
+  } finally {
+    savingEdit.value = false
+  }
+}
+
+watch(
+  () => editBook.value.imageFile,
+  (file) => {
+    if (!file) return
+
+    const selected = Array.isArray(file) ? file[0] : file
+    if (!selected) return
+
+    const reader = new FileReader()
+
+    reader.onload = (e) => {
+      editImagePreview.value = e.target.result
+      editBook.value.image = e.target.result
+    }
+
+    reader.readAsDataURL(selected)
+  }
+)
+
+async function deleteBook(bookId) {
+  try {
+    await axios.delete(`${API_URL}/books/${bookId}`, {
+      headers: authHeaders(),
+    })
+
+    await fetchBooks()
+    showMessage("Grāmata dzēsta.", "success")
+  } catch (error) {
+    console.error(error)
+    showMessage("Neizdevās dzēst grāmatu.", "error")
+  }
+}
+
+function getConditionColor(condition) {
+  const colors = {
+    Jauna: "success",
+    "Labā stāvoklī": "primary",
+    "Vidējā stāvoklī": "warning",
+    "Sliktā stāvoklī": "error",
+  }
+
+  return colors[condition] || "grey"
+}
+
+function showMessage(message, color = "success") {
+  snackbarMessage.value = message
+  snackbarColor.value = color
+  showSnackbar.value = true
 }
 </script>
 
 <style scoped>
+.library-page {
+  min-height: 100vh;
+  background: rgb(var(--v-theme-background));
+  color: rgb(var(--v-theme-on-background));
+}
+
+.page-content {
+  min-height: 100vh;
+  background: rgb(var(--v-theme-background));
+}
+
+.app-header {
+  background: rgb(var(--v-theme-surface)) !important;
+  color: rgb(var(--v-theme-on-surface)) !important;
+  border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.08);
+}
+
+.panel-card,
+.book-card,
+.content-card {
+  background: rgb(var(--v-theme-surface)) !important;
+  color: rgb(var(--v-theme-on-surface)) !important;
+  border: 1px solid rgba(var(--v-theme-on-surface), 0.08);
+}
+
+.add-card {
+  min-height: 300px;
+  cursor: pointer;
+  background: transparent !important;
+  border: 2px dashed rgba(var(--v-theme-on-surface), 0.35);
+}
+
 .gap-2 {
   gap: 8px;
 }
