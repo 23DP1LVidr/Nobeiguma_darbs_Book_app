@@ -1,132 +1,100 @@
 <template>
   <div class="messages-page">
-    <v-app-bar elevation="1" class="px-4 app-header">
-      <div class="d-flex align-center" style="width: 280px;">
-        <router-link to="/main" class="text-decoration-none">
-          <h1 class="text-h5 font-weight-bold text-primary">BookSwap</h1>
-        </router-link>
-      </div>
-
-      <v-spacer />
-
-      <router-link to="/profile" class="text-decoration-none">
-        <v-avatar size="36" color="primary">
-          <v-img v-if="user?.avatar" :src="user.avatar" />
-          <span v-else class="text-white text-caption">{{ initials }}</span>
-        </v-avatar>
-      </router-link>
-    </v-app-bar>
+    <AppHeader :user="user" :initials="initials" />
 
     <v-container fluid class="pa-0 page-content">
       <v-container class="py-6" style="max-width: 1200px;">
         <v-row>
-          <!-- Left Sidebar -->
           <v-col cols="12" md="3" class="d-none d-md-block">
-            <v-card rounded="xl" elevation="0" class="pa-4 mb-4 panel-card">
-              <div class="d-flex align-center mb-4">
-                <v-avatar size="48" color="primary" class="mr-3">
-                  <v-img v-if="user?.avatar" :src="user.avatar" />
-                  <span v-else class="text-white">{{ initials }}</span>
-                </v-avatar>
+            <AppSidebar :user="user" :initials="initials" @logout="logoutUser" />
+          </v-col>
 
-                <div>
-                  <div class="text-subtitle-1 font-weight-bold">
-                    {{ user?.name }} {{ user?.surname }}
-                  </div>
-                  <div class="text-caption text-medium-emphasis">
-                    @{{ user?.username }}
+          <v-col cols="12" md="6">
+            <v-card rounded="xl" elevation="0" class="chat-card content-card">
+              <div v-if="selectedChat" class="chat-header">
+                <div class="d-flex align-center">
+                  <v-avatar color="primary" class="mr-3">
+                    <v-img v-if="selectedChat.otherUser?.avatar" :src="selectedChat.otherUser.avatar" />
+                    <span v-else class="text-white">{{ userInitials(selectedChat.otherUser) }}</span>
+                  </v-avatar>
+
+                  <div>
+                    <div class="text-subtitle-1 font-weight-bold">
+                      {{ selectedChat.otherUser?.name }} {{ selectedChat.otherUser?.surname }}
+                    </div>
+
+                    <div class="text-caption text-medium-emphasis">
+                      {{ selectedChat.otherUser?.city || "Pilsēta nav norādīta" }}
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <v-divider class="mb-3" />
+              <div v-else class="chat-header">
+                <div class="text-subtitle-1 font-weight-bold">Izvēlieties sarunu</div>
+              </div>
 
-              <v-list density="compact" bg-color="transparent" nav>
-                <v-list-item prepend-icon="mdi-home" title="Sākums" to="/main" />
-                <v-list-item prepend-icon="mdi-book-open-variant" title="Mana bibliotēka" to="/library" />
-                <v-list-item prepend-icon="mdi-swap-horizontal" title="Manas apmaiņas" to="/exchanges" />
-                <v-list-item prepend-icon="mdi-message-text" title="Ziņas" to="/messages" />
-                <v-list-item prepend-icon="mdi-account-group" title="Draugi" to="/friends" />
-                <v-list-item prepend-icon="mdi-cog" title="Iestatījumi" to="/settings" />
-                <v-list-item prepend-icon="mdi-logout" title="Izrakstīties" @click="logoutUser" />
-              </v-list>
-            </v-card>
+              <v-divider />
 
-            <v-card rounded="xl" elevation="0" class="pa-4 panel-card">
-              <div class="text-subtitle-2 font-weight-bold mb-3">Jūsu grāmatas</div>
+              <div class="messages-area">
+                <div v-if="loadingMessages" class="text-center py-8">
+                  <v-progress-circular indeterminate color="primary" />
+                </div>
 
-              <div class="d-flex gap-2 flex-wrap">
-                <v-chip size="small" color="primary" variant="tonal">Fantāzija (4)</v-chip>
-                <v-chip size="small" color="secondary" variant="tonal">Detektīvs (3)</v-chip>
-                <v-chip size="small" color="grey" variant="tonal">Zinātne (2)</v-chip>
+                <template v-else>
+
+                  <!-- MESSAGES -->
+                  <div
+                    v-for="message in messages"
+                    :key="message.id"
+                  >
+                    <!-- SYSTEM MESSAGE -->
+                    <div v-if="message.user_id === null" class="message-row">
+                      <div class="system-message">
+                        {{ message.message }}
+                      </div>
+                    </div>
+
+                    <!-- USER MESSAGE -->
+                    <div
+                      v-else
+                      class="message-row"
+                      :class="{ mine: message.user_id === user?.id }"
+                    >
+                      <div class="message-bubble" :class="{ mine: message.user_id === user?.id }">
+                        {{ message.message }}
+                      </div>
+                    </div>
+                  </div>
+                </template>
+              </div>
+
+              <v-divider />
+
+              <div class="message-input">
+                <v-text-field
+                  v-model="newMessage"
+                  placeholder="Rakstīt ziņu..."
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  class="search-field"
+                  :disabled="!selectedChat"
+                  @keyup.enter="sendMessage"
+                />
+
+                <v-btn icon color="primary" class="ml-2" :disabled="!selectedChat" @click="sendMessage">
+                  <v-icon>mdi-send</v-icon>
+                </v-btn>
               </div>
             </v-card>
           </v-col>
 
-        <!-- CHAT (CENTER) -->
-        <v-col cols="12" md="6">
-            <v-card rounded="xl" elevation="0" class="chat-card content-card">
-            <!-- header -->
-            <div class="chat-header">
-                <div class="d-flex align-center">
-                <v-avatar :color="selectedChat.color" class="mr-3">
-                    <span class="text-white">{{ selectedChat.initials }}</span>
-                </v-avatar>
-
-                <div>
-                    <div class="text-subtitle-1 font-weight-bold">
-                    {{ selectedChat.name }}
-                    </div>
-                    <div class="text-caption text-medium-emphasis">
-                    Aktīvs nesen
-                    </div>
-                </div>
-                </div>
-            </div>
-
-            <v-divider />
-
-            <!-- messages -->
-            <div class="messages-area">
-                <div
-                v-for="message in selectedChat.messages"
-                :key="message.id"
-                class="message-row"
-                :class="{ mine: message.mine }"
-                >
-                <div class="message-bubble" :class="{ mine: message.mine }">
-                    {{ message.text }}
-                </div>
-                </div>
-            </div>
-
-            <v-divider />
-
-            <!-- input -->
-            <div class="message-input">
-                <v-text-field
-                v-model="newMessage"
-                placeholder="Rakstīt ziņu..."
-                variant="outlined"
-                density="compact"
-                hide-details
-                class="search-field"
-                @keyup.enter="sendMessage"
-                />
-
-                <v-btn icon color="primary" class="ml-2" @click="sendMessage">
-                <v-icon>mdi-send</v-icon>
-                </v-btn>
-            </div>
-            </v-card>
-        </v-col>
-
-        <!-- CHAT LIST (RIGHT) -->
-        <v-col cols="12" md="3">
+          <v-col cols="12" md="3">
             <v-card rounded="xl" elevation="0" class="pa-4 content-card">
-            <div class="text-subtitle-1 font-weight-bold mb-4">Sarunas</div>
+              <div class="text-subtitle-1 font-weight-bold mb-4">Sarunas</div>
 
-            <v-text-field
+              <v-text-field
                 v-model="search"
                 placeholder="Meklēt..."
                 prepend-inner-icon="mdi-magnify"
@@ -134,135 +102,252 @@
                 density="compact"
                 hide-details
                 class="mb-4 search-field"
-            />
+              />
 
-            <v-list bg-color="transparent">
+              <div v-if="loadingChats" class="text-center py-6">
+                <v-progress-circular indeterminate color="primary" />
+              </div>
+
+              <v-list v-else bg-color="transparent">
                 <v-list-item
-                v-for="chat in filteredChats"
-                :key="chat.id"
-                :active="selectedChat.id === chat.id"
-                rounded="xl"
-                class="mb-2"
-                @click="selectedChat = chat"
+                  v-for="chat in filteredChats"
+                  :key="chat.id"
+                  :active="selectedChat?.id === chat.id"
+                  rounded="xl"
+                  class="mb-2"
+                  @click="selectChat(chat)"
                 >
-                <template #prepend>
-                    <v-avatar :color="chat.color">
-                    <span class="text-white">{{ chat.initials }}</span>
+                  <template #prepend>
+                    <v-avatar color="primary">
+                      <v-img v-if="chat.otherUser?.avatar" :src="chat.otherUser.avatar" />
+                      <span v-else class="text-white">{{ userInitials(chat.otherUser) }}</span>
                     </v-avatar>
-                </template>
+                  </template>
 
-                <v-list-item-title class="font-weight-bold">
-                    {{ chat.name }}
-                </v-list-item-title>
+                  <v-list-item-title class="font-weight-bold">
+                    {{ chat.otherUser?.name }} {{ chat.otherUser?.surname }}
+                  </v-list-item-title>
 
-                <v-list-item-subtitle>
-                    {{ chat.lastMessage }}
-                </v-list-item-subtitle>
-
-                <template #append>
-                    <div class="text-caption text-medium-emphasis">
-                    {{ chat.time }}
-                    </div>
-                </template>
+                  <v-list-item-subtitle>
+                    {{ chat.lastMessage || "Nav ziņu" }}
+                  </v-list-item-subtitle>
                 </v-list-item>
-            </v-list>
+
+                <div v-if="filteredChats.length === 0" class="text-center text-medium-emphasis py-6">
+                  Nav aktīvu sarunu.
+                </div>
+              </v-list>
             </v-card>
-        </v-col>
+          </v-col>
         </v-row>
       </v-container>
     </v-container>
+
+    <v-snackbar v-model="showSnackbar" :color="snackbarColor" timeout="3000">
+      {{ snackbarMessage }}
+    </v-snackbar>
   </div>
 </template>
 
 <script setup>
-import { computed, ref } from "vue"
-import { useRouter } from "vue-router"
+import { computed, onMounted, onBeforeUnmount, ref } from "vue"
+import { useRoute, useRouter } from "vue-router"
+import axios from "axios"
+import AppHeader from "@/components/layout/AppHeader.vue"
+import AppSidebar from "@/components/layout/AppSidebar.vue"
 
 const router = useRouter()
+const route = useRoute()
 
-// User data from localStorage
+const API_URL = "http://127.0.0.1:8000/api"
+
 const user = ref(JSON.parse(localStorage.getItem("user")) || null)
 
-// Computed initials
-const initials = computed(() => {
-  const nameInitial = user.value?.name?.[0] || ""
-  const surnameInitial = user.value?.surname?.[0] || ""
-  return `${nameInitial}${surnameInitial}`.toUpperCase() || "U"
-})
+const initials = computed(() => userInitials(user.value))
 
-// Logout function
+const search = ref("")
+const newMessage = ref("")
+const chats = ref([])
+const selectedChat = ref(null)
+const messages = ref([])
+
+const loadingChats = ref(false)
+const loadingMessages = ref(false)
+
+const showSnackbar = ref(false)
+const snackbarMessage = ref("")
+const snackbarColor = ref("success")
+
+let messagesInterval = null
+let chatsInterval = null
+
+function userInitials(person) {
+  return `${person?.name?.[0] || ""}${person?.surname?.[0] || ""}`.toUpperCase() || "U"
+}
+
+function authHeaders() {
+  return {
+    Authorization: `Bearer ${localStorage.getItem("token")}`,
+  }
+}
+
 function logoutUser() {
   localStorage.removeItem("token")
   localStorage.removeItem("user")
   router.replace("/login")
 }
 
-const search = ref("")
-const newMessage = ref("")
-
-const chats = ref([
-  {
-    id: 1,
-    name: "Anna Kalniņa",
-    initials: "AK",
-    color: "secondary",
-    lastMessage: "Super, tiksimies rīt!",
-    time: "2h",
-    messages: [
-      { id: 1, text: "Sveiks! Vai grāmata vēl ir pieejama?", mine: false },
-      { id: 2, text: "Jā, vēl ir pieejama.", mine: true },
-      { id: 3, text: "Super, tiksimies rīt!", mine: false },
-    ],
-  },
-  {
-    id: 2,
-    name: "Pēteris Mārtins",
-    initials: "PM",
-    color: "teal",
-    lastMessage: "Varu piedāvāt arī 1984.",
-    time: "5h",
-    messages: [
-      { id: 1, text: "Sveiks, interesē apmaiņa?", mine: false },
-      { id: 2, text: "Jā, kādu grāmatu vari piedāvāt?", mine: true },
-      { id: 3, text: "Varu piedāvāt arī 1984.", mine: false },
-    ],
-  },
-  {
-    id: 3,
-    name: "Līga Vītola",
-    initials: "LV",
-    color: "orange",
-    lastMessage: "Paldies par grāmatu!",
-    time: "1d",
-    messages: [
-      { id: 1, text: "Paldies par grāmatu!", mine: false },
-      { id: 2, text: "Prieks, ka noderēja!", mine: true },
-    ],
-  },
-])
-
-const selectedChat = ref(chats.value[0])
-
 const filteredChats = computed(() => {
-  return chats.value.filter((chat) =>
-    chat.name.toLowerCase().includes(search.value.toLowerCase())
-  )
+  const query = search.value.toLowerCase()
+
+  return chats.value.filter((chat) => {
+    const fullName = `${chat.otherUser?.name || ""} ${chat.otherUser?.surname || ""}`.toLowerCase()
+    return fullName.includes(query)
+  })
 })
 
-function sendMessage() {
-  const text = newMessage.value.trim()
+onMounted(async () => {
+  await fetchChats()
 
-  if (!text) return
+  const conversationId = Number(route.query.conversation)
 
-  selectedChat.value.messages.push({
-    id: Date.now(),
-    text,
-    mine: true,
+  if (conversationId) {
+    const chat = chats.value.find((item) => Number(item.id) === conversationId)
+
+    if (chat) {
+      await selectChat(chat)
+    }
+  } else if (chats.value.length > 0) {
+    await selectChat(chats.value[0])
+  }
+
+  chatsInterval = setInterval(() => {
+    fetchChats(false)
+  }, 5000)
+
+  messagesInterval = setInterval(() => {
+    if (selectedChat.value) {
+      fetchMessages(selectedChat.value.id, false)
+    }
+  }, 3000)
+})
+
+onBeforeUnmount(() => {
+  if (messagesInterval) clearInterval(messagesInterval)
+  if (chatsInterval) clearInterval(chatsInterval)
+})
+
+async function fetchChats(showLoading = true) {
+  if (showLoading) loadingChats.value = true
+
+  try {
+    const response = await axios.get(`${API_URL}/conversations`, {
+      headers: authHeaders(),
+    })
+
+    chats.value = response.data.map((conversation) => {
+      const isUserOne = Number(conversation.user_one_id) === Number(user.value?.id)
+
+      const otherUser = isUserOne
+        ? conversation.user_two
+        : conversation.user_one
+
+      const lastMessageObj = conversation.messages?.[0]
+
+      let lastMessage = "Nav ziņu"
+
+      if (lastMessageObj) {
+        const isMine = Number(lastMessageObj.user_id) === Number(user.value?.id)
+
+        lastMessage = isMine
+          ? `Jūs: ${lastMessageObj.message}`
+          : lastMessageObj.message
+      }
+
+      return {
+        ...conversation,
+        otherUser,
+        lastMessage,
+      }
+    })
+
+    if (selectedChat.value) {
+      const updatedSelectedChat = chats.value.find(
+        (chat) => Number(chat.id) === Number(selectedChat.value.id)
+      )
+
+      if (updatedSelectedChat) {
+        selectedChat.value = updatedSelectedChat
+      }
+    }
+  } catch (error) {
+    console.error(error)
+
+    if (showLoading) {
+      showMessage("Neizdevās ielādēt sarunas.", "error")
+    }
+  } finally {
+    if (showLoading) loadingChats.value = false
+  }
+}
+
+async function selectChat(chat) {
+  selectedChat.value = chat
+
+  router.replace({
+    path: "/messages",
+    query: { conversation: chat.id },
   })
 
-  selectedChat.value.lastMessage = text
-  selectedChat.value.time = "tagad"
-  newMessage.value = ""
+  await fetchMessages(chat.id)
+}
+
+async function fetchMessages(conversationId, showLoading = true) {
+  if (showLoading) loadingMessages.value = true
+
+  try {
+    const response = await axios.get(`${API_URL}/conversations/${conversationId}/messages`, {
+      headers: authHeaders(),
+    })
+
+    messages.value = response.data
+  } catch (error) {
+    console.error(error)
+
+    if (showLoading) {
+      showMessage("Neizdevās ielādēt ziņas.", "error")
+    }
+  } finally {
+    if (showLoading) loadingMessages.value = false
+  }
+}
+
+async function sendMessage() {
+  const text = newMessage.value.trim()
+
+  if (!text || !selectedChat.value) return
+
+  try {
+    const response = await axios.post(
+      `${API_URL}/conversations/${selectedChat.value.id}/messages`,
+      { message: text },
+      { headers: authHeaders() }
+    )
+
+    messages.value.push(response.data)
+    newMessage.value = ""
+
+    await fetchChats(false)
+  } catch (error) {
+    console.error(error)
+    showMessage("Neizdevās nosūtīt ziņu.", "error")
+  }
+}
+
+function showMessage(message, color = "success") {
+  snackbarMessage.value = message
+  snackbarColor.value = color
+  showSnackbar.value = true
 }
 </script>
 
@@ -307,6 +392,16 @@ function sendMessage() {
   align-items: center;
 }
 
+.exchange-system-message {
+  max-width: 420px;
+  margin: 24px auto;
+  padding: 14px 18px;
+  border-radius: 16px;
+  text-align: center;
+  background: rgba(var(--v-theme-primary), 0.12);
+  border: 1px solid rgba(var(--v-theme-primary), 0.25);
+}
+
 .messages-area {
   flex: 1;
   padding: 16px;
@@ -338,5 +433,15 @@ function sendMessage() {
   padding: 16px;
   display: flex;
   align-items: center;
+}
+
+.system-message {
+  max-width: 70%;
+  margin: 0 auto 12px auto;
+  padding: 12px 16px;
+  border-radius: 14px;
+  text-align: center;
+  background: rgba(var(--v-theme-primary), 0.12);
+  border: 1px solid rgba(var(--v-theme-primary), 0.25);
 }
 </style>

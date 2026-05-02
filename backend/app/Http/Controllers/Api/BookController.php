@@ -8,11 +8,23 @@ use Illuminate\Http\Request;
 
 class BookController extends Controller
 {
+    // Get books that belong to the currently authenticated user (library page)
     public function index(Request $request)
     {
         return $request->user()->books;
     }
 
+    // Get books from OTHER users (exchange page)
+    public function available(Request $request)
+    {
+        return Book::with('user')
+            ->where('user_id', '!=', $request->user()->id)
+            ->where('is_available', true)
+            ->latest()
+            ->get();
+    }
+
+    // Store a new book for the authenticated user
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -20,7 +32,7 @@ class BookController extends Controller
             'author' => ['required', 'string', 'max:255'],
             'genre' => ['nullable', 'string', 'max:255'],
             'condition' => ['nullable', 'string', 'max:255'],
-            'image' => ['nullable', 'string'],
+            'image' => ['nullable', 'string'], // base64 image
         ]);
 
         $book = $request->user()->books()->create($data);
@@ -28,6 +40,7 @@ class BookController extends Controller
         return response()->json($book, 201);
     }
 
+    // Update an existing book
     public function update(Request $request, Book $book)
     {
         if ($book->user_id !== $request->user()->id) {
@@ -47,6 +60,7 @@ class BookController extends Controller
         return response()->json($book);
     }
 
+    // Delete book
     public function destroy(Request $request, Book $book)
     {
         if ($book->user_id !== $request->user()->id) {
@@ -56,13 +70,5 @@ class BookController extends Controller
         $book->delete();
 
         return response()->json(['message' => 'Deleted']);
-    }
-
-    public function available(Request $request)
-    {
-        return Book::with('user')
-            ->where('user_id', '!=', $request->user()->id)
-            ->latest()
-            ->get();
     }
 }

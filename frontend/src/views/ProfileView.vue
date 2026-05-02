@@ -1,55 +1,12 @@
 <template>
   <div class="profile-page">
-    <v-app-bar elevation="1" class="px-4 app-header">
-      <div class="d-flex align-center" style="width: 280px;">
-        <router-link to="/main" class="text-decoration-none">
-          <h1 class="text-h5 font-weight-bold text-primary">BookSwap</h1>
-        </router-link>
-      </div>
-
-      <v-spacer />
-
-      <router-link to="/profile" class="text-decoration-none">
-        <v-avatar size="36" color="primary">
-          <v-img v-if="user?.avatar" :src="user.avatar" />
-          <span v-else class="text-white text-caption">{{ initials }}</span>
-        </v-avatar>
-      </router-link>
-    </v-app-bar>
+    <AppHeader :user="user" :initials="initials" />
 
     <v-container fluid class="pa-0 page-content">
       <v-container class="py-6" style="max-width: 1200px;">
         <v-row>
           <v-col cols="12" md="3" class="d-none d-md-block">
-            <v-card rounded="xl" elevation="0" class="pa-4 mb-4 panel-card">
-              <div class="d-flex align-center mb-4">
-                <v-avatar size="48" color="primary" class="mr-3">
-                  <v-img v-if="user?.avatar" :src="user.avatar" />
-                  <span v-else class="text-white">{{ initials }}</span>
-                </v-avatar>
-
-                <div>
-                  <div class="text-subtitle-1 font-weight-bold">
-                    {{ user?.name }} {{ user?.surname }}
-                  </div>
-                  <div class="text-caption text-medium-emphasis">
-                    @{{ user?.username }}
-                  </div>
-                </div>
-              </div>
-
-              <v-divider class="mb-3" />
-
-              <v-list density="compact" bg-color="transparent" nav>
-                <v-list-item prepend-icon="mdi-home" title="Sākums" to="/main" />
-                <v-list-item prepend-icon="mdi-book-open-variant" title="Mana bibliotēka" to="/library" />
-                <v-list-item prepend-icon="mdi-swap-horizontal" title="Manas apmaiņas" to="/exchanges" />
-                <v-list-item prepend-icon="mdi-message-text" title="Ziņas" to="/messages" />
-                <v-list-item prepend-icon="mdi-account-group" title="Draugi" to="/friends" />
-                <v-list-item prepend-icon="mdi-cog" title="Iestatījumi" to="/settings" />
-                <v-list-item prepend-icon="mdi-logout" title="Izrakstīties" @click="logoutUser" />
-              </v-list>
-            </v-card>
+            <AppSidebar :user="user" :initials="initials" @logout="logoutUser" />
           </v-col>
 
           <v-col cols="12" md="6">
@@ -216,6 +173,8 @@
 import { computed, reactive, ref, watch } from "vue"
 import { useRouter } from "vue-router"
 import axios from "axios"
+import AppHeader from "@/components/layout/AppHeader.vue"
+import AppSidebar from "@/components/layout/AppSidebar.vue"
 
 const showSnackbar = ref(false)
 const snackbarMessage = ref("")

@@ -1,54 +1,13 @@
 <template>
   <div class="main-page">
-    <v-app-bar elevation="1" class="px-4 app-header">
-      <div class="d-flex align-center" style="width: 280px;">
-        <h1 class="text-h5 font-weight-bold text-primary">BookSwap</h1>
-      </div>
-
-      <v-spacer />
-
-      <router-link to="/profile" class="text-decoration-none">
-        <v-avatar size="36" color="primary" class="ml-2" style="cursor:pointer;">
-          <v-img v-if="userState.user?.avatar" :src="userState.user.avatar" />
-          <span v-else class="text-white text-caption">{{ initials }}</span>
-        </v-avatar>
-      </router-link>
-    </v-app-bar>
+    <AppHeader :user="userState.user" :initials="initials" />
 
     <v-container fluid class="pa-0 page-content">
       <v-container class="py-6" style="max-width: 1200px;">
         <v-row>
           <!-- Left Sidebar -->
           <v-col cols="12" md="3" class="d-none d-md-block">
-            <v-card rounded="xl" elevation="0" class="pa-4 mb-4 panel-card">
-              <div class="d-flex align-center mb-4">
-                <v-avatar size="48" color="primary" class="mr-3">
-                  <v-img v-if="userState.user?.avatar" :src="userState.user.avatar" />
-                  <span v-else class="text-white">{{ initials }}</span>
-                </v-avatar>
-
-                <div>
-                  <div class="text-subtitle-1 font-weight-bold">
-                    {{ userState.user?.name }} {{ userState.user?.surname }}
-                  </div>
-                  <div class="text-caption text-medium-emphasis">
-                    @{{ userState.user?.username }}
-                  </div>
-                </div>
-              </div>
-
-              <v-divider class="mb-3" />
-
-              <v-list density="compact" bg-color="transparent" nav>
-                <v-list-item prepend-icon="mdi-home" title="Sākums" to="/main" />
-                <v-list-item prepend-icon="mdi-book-open-variant" title="Mana bibliotēka" to="/library" />
-                <v-list-item prepend-icon="mdi-swap-horizontal" title="Manas apmaiņas" to="/exchanges" />
-                <v-list-item prepend-icon="mdi-message-text" title="Ziņas" to="/messages" />
-                <v-list-item prepend-icon="mdi-account-group" title="Draugi" to="/friends" />
-                <v-list-item prepend-icon="mdi-cog" title="Iestatījumi" to="/settings" />
-                <v-list-item prepend-icon="mdi-logout" title="Izrakstīties" @click="handleLogout" />
-              </v-list>
-            </v-card>
+            <AppSidebar :user="userState.user" :initials="initials" @logout="handleLogout" />
 
             <v-card rounded="xl" elevation="0" class="pa-4 panel-card">
               <div class="text-subtitle-2 font-weight-bold mb-3">Jūsu grāmatas</div>
@@ -281,18 +240,37 @@
                           <v-chip v-if="book.condition" size="x-small" :color="getConditionColor(book.condition)" variant="tonal">
                             {{ book.condition }}
                           </v-chip>
-
-                          <div class="text-caption text-medium-emphasis mt-2">
-                            Īpašnieks: {{ book.user?.name }} {{ book.user?.surname }}
-                          </div>
                         </div>
                       </div>
 
                       <v-divider class="my-3" />
 
                       <div class="d-flex justify-space-between align-center">
-                        <span class="text-caption">@{{ book.user?.username }}</span>
-                        <v-btn size="small" color="primary" variant="tonal">Apmainīties</v-btn>
+                        <router-link
+                          :to="`/profile/${book.user?.id}`"
+                          class="d-flex align-center owner-info text-decoration-none"
+                        >
+                          <v-avatar size="28" color="primary" class="mr-2">
+                            <v-img v-if="book.user?.avatar" :src="book.user.avatar" />
+                            <span v-else class="text-white text-caption">
+                              {{ getUserInitials(book.user) }}
+                            </span>
+                          </v-avatar>
+
+                          <div>
+                            <div class="text-caption font-weight-bold text-primary">
+                              {{ book.user?.name }} {{ book.user?.surname }}
+                            </div>
+
+                            <div class="text-caption text-medium-emphasis">
+                              {{ book.user?.city || "Pilsēta nav norādīta" }}
+                            </div>
+                          </div>
+                        </router-link>
+
+                        <v-btn size="small" color="primary" variant="tonal" @click="openExchangeDialog(book)">
+                          Apmainīties
+                        </v-btn>
                       </div>
                     </v-card>
                   </v-col>
@@ -357,6 +335,98 @@
         </v-row>
       </v-container>
     </v-container>
+    <v-dialog v-model="showExchangeDialog" max-width="520">
+      <v-card rounded="xl" class="pa-6 content-card">
+        <div class="text-h6 font-weight-bold mb-4">Pieprasīt apmaiņu</div>
+
+        <div class="exchange-preview mb-4">
+          <div v-if="selectedBook" class="exchange-preview-item">
+            <div class="text-body-2 text-medium-emphasis mb-2">
+              Jūs vēlaties saņemt:
+            </div>
+
+            <div class="d-flex">
+              <div class="exchange-cover mr-4">
+                <v-img
+                  v-if="selectedBook.image"
+                  :src="selectedBook.image"
+                  width="80"
+                  height="115"
+                  class="rounded"
+                  cover
+                />
+
+                <div v-else class="exchange-cover-placeholder rounded">
+                  <v-icon>mdi-book-open-page-variant</v-icon>
+                </div>
+              </div>
+
+              <div>
+                <div class="text-subtitle-1 font-weight-bold">{{ selectedBook.title }}</div>
+                <div class="text-body-2 text-medium-emphasis">{{ selectedBook.author }}</div>
+              </div>
+            </div>
+          </div>
+
+          <v-icon class="exchange-arrow" color="primary">
+            mdi-swap-horizontal
+          </v-icon>
+
+          <div v-if="selectedOfferedBook" class="exchange-preview-item">
+            <div class="text-body-2 text-medium-emphasis mb-2">
+              Jūs piedāvājat:
+            </div>
+
+            <div class="d-flex">
+              <div class="exchange-cover mr-4">
+                <v-img
+                  v-if="selectedOfferedBook.image"
+                  :src="selectedOfferedBook.image"
+                  width="80"
+                  height="115"
+                  class="rounded"
+                  cover
+                />
+
+                <div v-else class="exchange-cover-placeholder rounded">
+                  <v-icon>mdi-book-open-page-variant</v-icon>
+                </div>
+              </div>
+
+              <div>
+                <div class="text-subtitle-1 font-weight-bold">{{ selectedOfferedBook.title }}</div>
+                <div class="text-body-2 text-medium-emphasis">{{ selectedOfferedBook.author }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <v-select
+          v-model="selectedOfferedBookId"
+          :items="myBookOptions"
+          label="Izvēlieties grāmatu, ko piedāvāt"
+          variant="outlined"
+          item-title="title"
+          item-value="id"
+          class="mb-4"
+          clearable
+        />
+
+        <div class="d-flex justify-end">
+          <v-btn variant="text" class="mr-2" @click="showExchangeDialog = false">
+            Atcelt
+          </v-btn>
+
+          <v-btn color="primary" :loading="creatingExchange" @click="createExchangeRequest">
+            Nosūtīt pieprasījumu
+          </v-btn>
+        </div>
+      </v-card>
+    </v-dialog>
+
+    <v-snackbar v-model="showSnackbar" :color="snackbarColor" timeout="3000">
+      {{ snackbarMessage }}
+    </v-snackbar>
     <v-snackbar
       v-model="showProfileReminder"
       location="top right"
@@ -400,6 +470,8 @@ import { ref, computed, onMounted, watch } from "vue"
 import axios from "axios"
 import { useRouter } from "vue-router"
 import { userState, initials, logout } from "@/stores/userStore"
+import AppHeader from "@/components/layout/AppHeader.vue"
+import AppSidebar from "@/components/layout/AppSidebar.vue"
 
 const router = useRouter()
 
@@ -419,6 +491,7 @@ const showProfileReminder = ref(false)
 
 onMounted(() => {
   fetchAvailableBooks()
+  fetchMyBooks()
 
   const alreadyShown = localStorage.getItem("profile_reminder_shown")
   if (!alreadyShown) {
@@ -430,8 +503,14 @@ onMounted(() => {
     }
   }
 })
-
 const activeTab = ref("feed")
+
+watch(activeTab, (tab) => {
+  if (tab === "exchange") {
+    fetchAvailableBooks()
+  }
+})
+
 const newPost = ref("")
 
 const bookSearch = ref("")
@@ -530,6 +609,89 @@ function getConditionColor(condition) {
   return colors[condition] || "grey"
 }
 
+function getUserInitials(user) {
+  return `${user?.name?.[0] || ""}${user?.surname?.[0] || ""}`.toUpperCase() || "U"
+}
+
+const showExchangeDialog = ref(false)
+const selectedBook = ref(null)
+const selectedOfferedBookId = ref(null)
+const creatingExchange = ref(false)
+
+const myBooks = ref([])
+
+const showSnackbar = ref(false)
+const snackbarMessage = ref("")
+const snackbarColor = ref("success")
+
+const myBookOptions = computed(() => {
+  return myBooks.value.map((book) => ({
+    id: book.id,
+    title: `${book.title} — ${book.author}`,
+  }))
+})
+
+async function fetchMyBooks() {
+  try {
+    const response = await axios.get(`${API_URL}/books`, {
+      headers: authHeaders(),
+    })
+
+    myBooks.value = response.data
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+function openExchangeDialog(book) {
+  selectedBook.value = book
+  selectedOfferedBookId.value = null
+  showExchangeDialog.value = true
+}
+
+async function createExchangeRequest() {
+  if (!selectedBook.value) return
+
+  creatingExchange.value = true
+
+  try {
+    const response = await axios.post(
+      `${API_URL}/exchanges`,
+      {
+        requested_book_id: selectedBook.value.id,
+        offered_book_id: selectedOfferedBookId.value,
+      },
+      {
+        headers: authHeaders(),
+      }
+    )
+
+    showExchangeDialog.value = false
+
+    showMessage("Apmaiņas pieprasījums nosūtīts.", "success")
+
+  } catch (error) {
+    console.error(error)
+
+    showMessage(
+      error.response?.data?.message || "Neizdevās nosūtīt apmaiņas pieprasījumu.",
+      "error"
+    )
+  } finally {
+    creatingExchange.value = false
+  }
+}
+
+const selectedOfferedBook = computed(() => {
+  return myBooks.value.find((book) => book.id === selectedOfferedBookId.value) || null
+})
+
+function showMessage(message, color = "success") {
+  snackbarMessage.value = message
+  snackbarColor.value = color
+  showSnackbar.value = true
+}
+
 const trendingBooks = [
   {
     title: "Staburadis",
@@ -565,6 +727,40 @@ const suggestedFriends = [
   background: rgb(var(--v-theme-surface)) !important;
   color: rgb(var(--v-theme-on-surface)) !important;
   border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.08);
+}
+
+.exchange-preview {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 16px;
+  align-items: center;
+}
+
+.exchange-preview-item {
+  min-width: 0;
+}
+
+.exchange-arrow {
+  margin-top: 28px;
+}
+
+.exchange-cover {
+  width: 80px;
+  min-width: 80px;
+  height: 115px;
+}
+
+.exchange-cover-placeholder {
+  width: 80px;
+  height: 115px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(var(--v-theme-on-surface), 0.06);
+}
+
+.owner-info {
+  min-width: 0;
 }
 
 .panel-card,

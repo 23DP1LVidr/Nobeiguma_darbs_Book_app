@@ -25,11 +25,6 @@ const router = createRouter({
       component: () => import('../views/ExchangesView.vue'),
     },
     {
-      path: "/friends",
-      name: 'friends',
-      component: () => import('../views/FriendsView.vue'),
-    },
-    {
       path: "/messages",
       name: 'messages',
       component: () => import('../views/MessagesView.vue'),
@@ -53,6 +48,11 @@ const router = createRouter({
       path: '/profile',
       name: 'profile',
       component: () => import('../views/ProfileView.vue'),
+    },
+    {
+      path: '/profile/:id',
+      name: 'UserProfile',
+      component: () => import('@/views/UserProfileView.vue')
     },
     {
       path: '/settings',
