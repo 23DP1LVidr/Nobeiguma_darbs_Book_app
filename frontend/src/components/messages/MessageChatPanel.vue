@@ -2,6 +2,16 @@
   <v-card rounded="xl" elevation="0" class="chat-card content-card">
     <div v-if="selectedChat" class="chat-header">
       <div class="d-flex align-center">
+        <v-btn
+          icon
+          size="small"
+          variant="text"
+          class="mr-2 d-md-none"
+          @click="$emit('back')"
+        >
+          <v-icon>mdi-arrow-left</v-icon>
+        </v-btn>
+
         <v-avatar color="primary" class="mr-3">
           <v-img v-if="selectedChat.otherUser?.avatar" :src="selectedChat.otherUser.avatar" />
           <span v-else class="text-white">{{ userInitials(selectedChat.otherUser) }}</span>
@@ -104,7 +114,7 @@ defineProps({
   },
 })
 
-defineEmits(["update:newMessage", "send"])
+defineEmits(["update:newMessage", "send", "back"])
 </script>
 
 <style scoped>
@@ -172,5 +182,20 @@ defineEmits(["update:newMessage", "send"])
   text-align: center;
   background: rgba(var(--v-theme-primary), 0.12);
   border: 1px solid rgba(var(--v-theme-primary), 0.25);
+}
+
+@media (max-width: 959px) {
+  .chat-card {
+    min-height: calc(100vh - 96px);
+    border-radius: 0 !important;
+  }
+
+  .messages-area {
+    min-height: 0;
+  }
+
+  .message-bubble {
+    max-width: 88%;
+  }
 }
 </style>

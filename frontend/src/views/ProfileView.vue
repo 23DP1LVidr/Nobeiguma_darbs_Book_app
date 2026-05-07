@@ -80,20 +80,42 @@
                   </div>
                 </div>
 
-                <v-btn variant="text" color="primary" to="/library">
+                <v-btn variant="text" color="primary" @click="router.push('/library')">
                   Skatīt visas
                 </v-btn>
               </div>
 
-              <v-row>
+              <div v-if="loadingBooks" class="text-center py-6">
+                <v-progress-circular indeterminate color="primary" size="28" />
+              </div>
+
+              <v-row v-else-if="books.length">
                 <v-col cols="12" sm="6" md="4" v-for="book in books" :key="book.id">
                   <v-card rounded="xl" elevation="1" class="pa-3 book-card">
-                    <v-img :src="book.cover" aspect-ratio="0.7" class="rounded-lg mb-2" cover />
+                    <v-img
+                      v-if="book.image"
+                      :src="book.image"
+                      aspect-ratio="0.7"
+                      class="rounded-lg mb-2"
+                      cover
+                    />
+
+                    <div
+                      v-else
+                      class="rounded-lg mb-2 d-flex align-center justify-center book-placeholder"
+                    >
+                      <v-icon size="44">mdi-book-open-page-variant</v-icon>
+                    </div>
+
                     <div class="text-subtitle-2 font-weight-bold">{{ book.title }}</div>
                     <div class="text-caption text-medium-emphasis">{{ book.author }}</div>
                   </v-card>
                 </v-col>
               </v-row>
+
+              <div v-else class="text-body-2 text-medium-emphasis">
+                Tev vēl nav pievienotu grāmatu.
+              </div>
             </v-card>
           </v-col>
 
@@ -101,11 +123,19 @@
             <v-card rounded="xl" elevation="0" class="pa-4 mb-4 panel-card">
               <div class="text-subtitle-1 font-weight-bold mb-3">Mīļākie žanri</div>
 
-              <div class="d-flex gap-2 flex-wrap">
-                <v-chip color="primary" variant="tonal">Fantāzija</v-chip>
-                <v-chip color="secondary" variant="tonal">Zinātne</v-chip>
-                <v-chip color="success" variant="tonal">Klasika</v-chip>
-                <v-chip color="warning" variant="tonal">Detektīvs</v-chip>
+              <div v-if="topGenres.length" class="d-flex gap-2 flex-wrap">
+                <v-chip
+                  v-for="genre in topGenres"
+                  :key="genre.name"
+                  color="primary"
+                  variant="tonal"
+                >
+                  {{ genre.name }} ({{ genre.count }})
+                </v-chip>
+              </div>
+
+              <div v-else class="text-body-2 text-medium-emphasis">
+                Žanri parādīsies, kad pievienosi grāmatas.
               </div>
             </v-card>
           </v-col>
@@ -182,7 +212,11 @@ const snackbarColor = ref("success")
 
 const router = useRouter()
 
+const API_URL = "http://127.0.0.1:8000/api"
+
 const user = ref(JSON.parse(localStorage.getItem("user")) || null)
+const books = ref([])
+const loadingBooks = ref(false)
 const showEditDialog = ref(false)
 const saving = ref(false)
 const avatarPreview = ref(user.value?.avatar || "")
@@ -201,9 +235,23 @@ const initials = computed(() => {
   return `${nameInitial}${surnameInitial}`.toUpperCase() || "U"
 })
 
+const topGenres = computed(() => {
+  const counts = books.value.reduce((result, book) => {
+    if (!book.genre) return result
+    result[book.genre] = (result[book.genre] || 0) + 1
+    return result
+  }, {})
+
+  return Object.entries(counts)
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
+    .slice(0, 4)
+})
+
 onMounted(() => {
   document.documentElement.classList.add("profile-page-locked")
   document.body.classList.add("profile-page-locked")
+  fetchBooks()
 })
 
 onBeforeUnmount(() => {
@@ -277,32 +325,36 @@ async function saveProfile() {
     }
 }
 
+async function fetchBooks() {
+  const token = localStorage.getItem("token")
+
+  if (!token) {
+    router.replace("/register")
+    return
+  }
+
+  loadingBooks.value = true
+
+  try {
+    const response = await axios.get(`${API_URL}/books`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+
+    books.value = response.data
+  } catch (error) {
+    console.error(error)
+  } finally {
+    loadingBooks.value = false
+  }
+}
+
 function logoutUser() {
   localStorage.removeItem("token")
   localStorage.removeItem("user")
   router.replace("/login")
 }
-
-const books = ref([
-  {
-    id: 1,
-    title: "Pērkoņa zirgs",
-    author: "Ainažu Frics",
-    cover: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=300",
-  },
-  {
-    id: 2,
-    title: "1984",
-    author: "Džordžs Orvels",
-    cover: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=300",
-  },
-  {
-    id: 3,
-    title: "Melu anatomija",
-    author: "Māra Bērziņa",
-    cover: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=300",
-  },
-])
 </script>
 
 <style scoped>
@@ -388,6 +440,11 @@ const books = ref([
 
 .gap-2 {
   gap: 8px;
+}
+
+.book-placeholder {
+  height: 220px;
+  background: rgba(var(--v-theme-on-surface), 0.06);
 }
 
 @media (max-width: 959px) {

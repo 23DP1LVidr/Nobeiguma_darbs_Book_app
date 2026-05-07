@@ -9,7 +9,12 @@
             <AppSidebar :user="user" :initials="initials" @logout="logoutUser" />
           </v-col>
 
-          <v-col cols="12" md="6" class="messages-scroll-col">
+          <v-col
+            cols="12"
+            md="6"
+            class="messages-scroll-col"
+            :class="{ 'd-none d-md-flex': !selectedChat }"
+          >
             <MessageChatPanel
               v-model:new-message="newMessage"
               :selected-chat="selectedChat"
@@ -18,10 +23,16 @@
               :current-user-id="user?.id"
               :user-initials="userInitials"
               @send="sendMessage"
+              @back="closeMobileChat"
             />
           </v-col>
 
-          <v-col cols="12" md="3" class="messages-side-col">
+          <v-col
+            cols="12"
+            md="3"
+            class="messages-side-col"
+            :class="{ 'd-none d-md-block': selectedChat }"
+          >
             <ConversationListPanel
               v-model:search="search"
               :chats="filteredChats"
@@ -213,6 +224,15 @@ async function selectChat(chat) {
   await fetchMessages(chat.id)
 }
 
+function closeMobileChat() {
+  selectedChat.value = null
+  messages.value = []
+
+  router.replace({
+    path: "/messages",
+  })
+}
+
 async function fetchMessages(conversationId, showLoading = true) {
   if (showLoading) loadingMessages.value = true
 
@@ -308,6 +328,8 @@ function showMessage(message, color = "success") {
   overflow-y: auto;
   padding-bottom: 32px;
   scrollbar-gutter: stable;
+  display: flex;
+  flex-direction: column;
 }
 
 .sidebar-col,
@@ -328,14 +350,28 @@ function showMessage(message, color = "success") {
 
   .messages-page,
   .page-content {
-    height: auto;
+    height: calc(100vh - 64px);
     min-height: 100vh;
-    overflow: visible;
+    overflow: hidden;
   }
 
   .messages-scroll-col {
-    height: auto;
-    overflow: visible;
+    height: 100%;
+    overflow: hidden;
+    padding-bottom: 0;
+  }
+
+  .messages-shell,
+  .messages-layout-row,
+  .messages-side-col {
+    height: 100%;
+    min-height: 0;
+  }
+
+  .messages-side-col {
+    max-height: none;
+    overflow-y: auto;
+    position: static;
   }
 }
 </style>

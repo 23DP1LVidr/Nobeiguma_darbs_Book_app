@@ -1,6 +1,6 @@
 <template>
   <v-card rounded="xl" elevation="0" class="pa-4 mb-4 panel-card">
-    <div class="d-flex align-center mb-4">
+    <router-link to="/profile" class="sidebar-profile-link d-flex align-center mb-4">
       <v-avatar size="48" color="primary" class="mr-3">
         <v-img v-if="user?.avatar" :src="user.avatar" />
         <span v-else class="text-white">{{ initials }}</span>
@@ -14,7 +14,7 @@
           {{ user ? `@${user.username}` : "Pārlūko publisko saturu" }}
         </div>
       </div>
-    </div>
+    </router-link>
 
     <v-divider class="mb-3" />
 
@@ -141,5 +141,16 @@ async function fetchNotifications() {
   background: rgb(var(--v-theme-surface)) !important;
   color: rgb(var(--v-theme-on-surface)) !important;
   border: 1px solid rgba(var(--v-theme-on-surface), 0.08);
+}
+
+.sidebar-profile-link {
+  color: inherit;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: background-color 0.15s ease;
+}
+
+.sidebar-profile-link:hover {
+  background: rgba(var(--v-theme-on-surface), 0.06);
 }
 </style>
