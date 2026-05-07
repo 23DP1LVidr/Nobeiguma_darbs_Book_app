@@ -3,118 +3,33 @@
     <AppHeader :user="user" :initials="initials" />
 
     <v-container fluid class="pa-0 page-content">
-      <v-container class="py-6" style="max-width: 1200px;">
-        <v-row>
-          <v-col cols="12" md="3" class="d-none d-md-block">
-            <AppSidebar :user="user" :initials="initials" @logout="logoutUser" />
+      <v-container class="py-6 exchanges-shell" style="max-width: 1200px;">
+        <v-row class="exchanges-layout-row">
+          <ExchangeStatsSidebar
+            class="sidebar-col"
+            :user="user"
+            :initials="initials"
+            :pending-count="pendingExchanges.length"
+            :active-count="activeExchanges.length"
+            :completed-count="completedExchanges.length"
+            @logout="logoutUser"
+          />
 
-            <v-card rounded="xl" elevation="0" class="pa-4 panel-card">
-              <div class="text-subtitle-2 font-weight-bold mb-3">Apmaiņu statistika</div>
-
-              <div class="d-flex justify-space-between mb-2">
-                <span class="text-body-2">Gaida</span>
-                <span class="text-body-2 font-weight-bold">{{ pendingExchanges.length }}</span>
-              </div>
-
-              <div class="d-flex justify-space-between mb-2">
-                <span class="text-body-2">Aktīvas</span>
-                <span class="text-body-2 font-weight-bold">{{ activeExchanges.length }}</span>
-              </div>
-
-              <div class="d-flex justify-space-between">
-                <span class="text-body-2">Pabeigtas</span>
-                <span class="text-body-2 font-weight-bold">{{ completedExchanges.length }}</span>
-              </div>
-            </v-card>
+          <v-col cols="12" md="6" class="exchanges-scroll-col">
+            <ExchangeListPanel
+              :pending-exchanges="pendingExchanges"
+              :active-exchanges="activeExchanges"
+              :completed-exchanges="completedExchanges"
+              :current-user-id="Number(user?.id)"
+              :loading="loadingExchanges"
+              @accept="acceptExchange"
+              @reject="rejectExchange"
+              @cancel="cancelExchange"
+              @complete="completeExchange"
+            />
           </v-col>
 
-          <v-col cols="12" md="6">
-            <div class="d-flex justify-space-between align-center mb-6">
-              <div>
-                <h1 class="text-h4 font-weight-bold">Manas apmaiņas</h1>
-                <p class="text-body-1 text-medium-emphasis">
-                  Sekojiet līdzi savām grāmatu apmaiņām
-                </p>
-              </div>
-
-              <v-btn color="primary" prepend-icon="mdi-magnify" to="/main">
-                Atrast grāmatas
-              </v-btn>
-            </div>
-
-            <v-tabs v-model="activeTab" color="primary" class="mb-4">
-              <v-tab value="pending">Gaida <span class="ml-2">({{ pendingExchanges.length }})</span></v-tab>
-              <v-tab value="active">Aktīvas <span class="ml-2">({{ activeExchanges.length }})</span></v-tab>
-              <v-tab value="completed">Pabeigtas <span class="ml-2">({{ completedExchanges.length }})</span></v-tab>
-            </v-tabs>
-
-            <div v-if="loadingExchanges" class="text-center py-10">
-              <v-progress-circular indeterminate color="primary" />
-            </div>
-
-            <v-window v-else v-model="activeTab">
-              <v-window-item value="pending">
-                <div v-if="pendingExchanges.length === 0" class="text-center py-10">
-                  <v-icon size="56" color="grey">mdi-swap-horizontal</v-icon>
-                  <div class="text-h6 mt-3">Nav gaidošu apmaiņu</div>
-                </div>
-
-                <ExchangeCard
-                  v-for="exchange in pendingExchanges"
-                  :key="exchange.id"
-                  :exchange="exchange"
-                  :current-user-id="Number(user?.id)"
-                  pending
-                  @accept="acceptExchange"
-                  @reject="rejectExchange"
-                  @cancel="cancelExchange"
-                />
-              </v-window-item>
-
-              <v-window-item value="active">
-                <div v-if="activeExchanges.length === 0" class="text-center py-10">
-                  <v-icon size="56" color="grey">mdi-handshake</v-icon>
-                  <div class="text-h6 mt-3">Nav aktīvu apmaiņu</div>
-                </div>
-
-                <ExchangeCard
-                  v-for="exchange in activeExchanges"
-                  :key="exchange.id"
-                  :exchange="exchange"
-                  :current-user-id="Number(user?.id)"
-                  active
-                  @complete="completeExchange"
-                />
-              </v-window-item>
-
-              <v-window-item value="completed">
-                <div v-if="completedExchanges.length === 0" class="text-center py-10">
-                  <v-icon size="56" color="grey">mdi-check-circle-outline</v-icon>
-                  <div class="text-h6 mt-3">Nav pabeigtu apmaiņu</div>
-                </div>
-
-                <ExchangeCard
-                  v-for="exchange in completedExchanges"
-                  :key="exchange.id"
-                  :exchange="exchange"
-                  :current-user-id="Number(user?.id)"
-                  completed
-                />
-              </v-window-item>
-            </v-window>
-          </v-col>
-
-          <v-col cols="12" md="3" class="d-none d-md-block">
-            <v-card rounded="xl" elevation="0" class="pa-4 mb-4 panel-card">
-              <div class="text-subtitle-1 font-weight-bold mb-3">Ātrās darbības</div>
-              <v-btn block variant="tonal" color="primary" class="mb-2" prepend-icon="mdi-magnify" to="/main">
-                Pārlūkot piedāvājumus
-              </v-btn>
-              <v-btn block variant="outlined" prepend-icon="mdi-book-open-variant" to="/library">
-                Mana bibliotēka
-              </v-btn>
-            </v-card>
-          </v-col>
+          <ExchangeQuickActions class="sidebar-col" />
         </v-row>
       </v-container>
     </v-container>
@@ -126,44 +41,31 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue"
+import { computed, onBeforeUnmount, onMounted, ref } from "vue"
 import axios from "axios"
 import { useRouter } from "vue-router"
-import ExchangeCard from "@/components/ExchangeCard.vue"
 import AppHeader from "@/components/layout/AppHeader.vue"
-import AppSidebar from "@/components/layout/AppSidebar.vue"
+import ExchangeListPanel from "@/components/exchanges/ExchangeListPanel.vue"
+import ExchangeQuickActions from "@/components/exchanges/ExchangeQuickActions.vue"
+import ExchangeStatsSidebar from "@/components/exchanges/ExchangeStatsSidebar.vue"
 
 const router = useRouter()
 
-const user = ref(JSON.parse(localStorage.getItem("user")) || null)
-
-const initials = computed(() => {
-  const nameInitial = user.value?.name?.[0] || ""
-  const surnameInitial = user.value?.surname?.[0] || ""
-  return `${nameInitial}${surnameInitial}`.toUpperCase() || "U"
-})
-
-function logoutUser() {
-  localStorage.removeItem("token")
-  localStorage.removeItem("user")
-  router.replace("/login")
-}
-
 const API_URL = "http://127.0.0.1:8000/api"
 
-function authHeaders() {
-  return {
-    Authorization: `Bearer ${localStorage.getItem("token")}`,
-  }
-}
-
-const activeTab = ref("pending")
+const user = ref(JSON.parse(localStorage.getItem("user")) || null)
 const exchanges = ref([])
 const loadingExchanges = ref(false)
 
 const showSnackbar = ref(false)
 const snackbarMessage = ref("")
 const snackbarColor = ref("success")
+
+const initials = computed(() => {
+  const nameInitial = user.value?.name?.[0] || ""
+  const surnameInitial = user.value?.surname?.[0] || ""
+  return `${nameInitial}${surnameInitial}`.toUpperCase() || "U"
+})
 
 const pendingExchanges = computed(() =>
   exchanges.value.filter((exchange) => exchange.status === "pending")
@@ -178,11 +80,32 @@ const completedExchanges = computed(() =>
 )
 
 onMounted(() => {
+  document.documentElement.classList.add("exchanges-page-locked")
+  document.body.classList.add("exchanges-page-locked")
+  localStorage.setItem("exchanges_seen_at", String(Date.now()))
   fetchExchanges()
 })
 
+onBeforeUnmount(() => {
+  document.documentElement.classList.remove("exchanges-page-locked")
+  document.body.classList.remove("exchanges-page-locked")
+})
+
+function authHeaders() {
+  return {
+    Authorization: `Bearer ${localStorage.getItem("token")}`,
+  }
+}
+
+function logoutUser() {
+  localStorage.removeItem("token")
+  localStorage.removeItem("user")
+  router.replace("/login")
+}
+
 async function fetchExchanges() {
   loadingExchanges.value = true
+  localStorage.setItem("exchanges_seen_at", String(Date.now()))
 
   try {
     const response = await axios.get(`${API_URL}/exchanges`, {
@@ -204,11 +127,9 @@ async function acceptExchange(exchangeId) {
       headers: authHeaders(),
     })
 
-    const conversationId = response.data.conversation_id
-
     router.push({
       path: "/messages",
-      query: { conversation: conversationId },
+      query: { conversation: response.data.conversation_id },
     })
   } catch (error) {
     console.error(error)
@@ -222,9 +143,7 @@ async function rejectExchange(exchangeId) {
       headers: authHeaders(),
     })
 
-    exchanges.value = exchanges.value.filter(
-      (exchange) => exchange.id !== exchangeId
-    )
+    removeExchange(exchangeId)
     showMessage("Apmaiņa noraidīta.", "success")
   } catch (error) {
     console.error(error)
@@ -238,9 +157,7 @@ async function completeExchange(exchangeId) {
       headers: authHeaders(),
     })
 
-    exchanges.value = exchanges.value.filter(
-      (exchange) => exchange.id !== exchangeId
-    )
+    removeExchange(exchangeId)
     showMessage("Apmaiņa pabeigta.", "success")
   } catch (error) {
     console.error(error)
@@ -254,14 +171,18 @@ async function cancelExchange(exchangeId) {
       headers: authHeaders(),
     })
 
-    exchanges.value = exchanges.value.filter(
-      (exchange) => exchange.id !== exchangeId
-    )
+    removeExchange(exchangeId)
     showMessage("Apmaiņa atcelta.", "success")
   } catch (error) {
     console.error(error)
     showMessage("Neizdevās atcelt apmaiņu.", "error")
   }
+}
+
+function removeExchange(exchangeId) {
+  exchanges.value = exchanges.value.filter(
+    (exchange) => exchange.id !== exchangeId
+  )
 }
 
 function showMessage(message, color = "success") {
@@ -272,44 +193,77 @@ function showMessage(message, color = "success") {
 </script>
 
 <style scoped>
+:global(html.exchanges-page-locked),
+:global(body.exchanges-page-locked) {
+  height: 100%;
+  overflow: hidden !important;
+}
+
+:global(body.exchanges-page-locked #app),
+:global(body.exchanges-page-locked .v-application),
+:global(body.exchanges-page-locked .v-application__wrap),
+:global(body.exchanges-page-locked .v-main) {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .exchanges-page {
-  min-height: 100vh;
+  height: 100vh;
   background: rgb(var(--v-theme-background));
   color: rgb(var(--v-theme-on-background));
+  overflow: hidden;
 }
 
 .page-content {
-  min-height: 100vh;
+  height: calc(100vh - 64px);
   background: rgb(var(--v-theme-background));
+  overflow: hidden;
 }
 
-.app-header {
-  background: rgb(var(--v-theme-surface)) !important;
-  color: rgb(var(--v-theme-on-surface)) !important;
-  border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.08);
+.exchanges-shell {
+  height: 100%;
+  box-sizing: border-box;
 }
 
-.panel-card,
-.content-card {
-  background: rgb(var(--v-theme-surface)) !important;
-  color: rgb(var(--v-theme-on-surface)) !important;
-  border: 1px solid rgba(var(--v-theme-on-surface), 0.08);
+.exchanges-layout-row {
+  height: 100%;
+  min-height: 0;
 }
 
-.exchange-books {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+.exchanges-scroll-col {
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 32px;
+  scrollbar-gutter: stable;
 }
 
-.book-placeholder {
-  width: 60px;
-  height: 90px;
-  border-radius: 8px;
-  background: rgba(var(--v-theme-on-surface), 0.06);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.sidebar-col {
+  align-self: flex-start;
+  position: sticky;
+  top: 24px;
+  max-height: calc(100vh - 48px);
+  overflow: hidden;
+}
+
+@media (max-width: 959px) {
+  :global(html.exchanges-page-locked),
+  :global(body.exchanges-page-locked) {
+    height: auto;
+    overflow: visible !important;
+  }
+
+  .exchanges-page,
+  .page-content {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+
+  .exchanges-scroll-col {
+    height: auto;
+    overflow: visible;
+  }
 }
 </style>

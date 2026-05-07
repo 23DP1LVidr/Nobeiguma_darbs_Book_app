@@ -84,6 +84,13 @@
           >
             Reģistrēties
           </v-btn>
+
+          <div class="text-center mt-4">
+            <span class="text-medium-emphasis">Jau ir konts?</span>
+            <v-btn to="/login" variant="text" color="primary" class="ml-1">
+              Pieteikties
+            </v-btn>
+          </div>
         </v-form>
       </v-card>
     </v-container>

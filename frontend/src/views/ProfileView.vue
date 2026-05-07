@@ -3,13 +3,13 @@
     <AppHeader :user="user" :initials="initials" />
 
     <v-container fluid class="pa-0 page-content">
-      <v-container class="py-6" style="max-width: 1200px;">
-        <v-row>
-          <v-col cols="12" md="3" class="d-none d-md-block">
+      <v-container class="py-6 profile-shell" style="max-width: 1200px;">
+        <v-row class="profile-layout-row">
+          <v-col cols="12" md="3" class="d-none d-md-block sidebar-col">
             <AppSidebar :user="user" :initials="initials" @logout="logoutUser" />
           </v-col>
 
-          <v-col cols="12" md="6">
+          <v-col cols="12" md="6" class="profile-scroll-col">
             <v-card rounded="xl" elevation="2" class="profile-hero mb-4">
               <div class="cover"></div>
 
@@ -97,7 +97,7 @@
             </v-card>
           </v-col>
 
-          <v-col cols="12" md="3" class="d-none d-md-block">
+          <v-col cols="12" md="3" class="d-none d-md-block sidebar-col">
             <v-card rounded="xl" elevation="0" class="pa-4 mb-4 panel-card">
               <div class="text-subtitle-1 font-weight-bold mb-3">Mīļākie žanri</div>
 
@@ -170,7 +170,7 @@
 </template>
 
 <script setup>
-import { computed, reactive, ref, watch } from "vue"
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue"
 import { useRouter } from "vue-router"
 import axios from "axios"
 import AppHeader from "@/components/layout/AppHeader.vue"
@@ -199,6 +199,16 @@ const initials = computed(() => {
   const nameInitial = user.value?.name?.[0] || ""
   const surnameInitial = user.value?.surname?.[0] || ""
   return `${nameInitial}${surnameInitial}`.toUpperCase() || "U"
+})
+
+onMounted(() => {
+  document.documentElement.classList.add("profile-page-locked")
+  document.body.classList.add("profile-page-locked")
+})
+
+onBeforeUnmount(() => {
+  document.documentElement.classList.remove("profile-page-locked")
+  document.body.classList.remove("profile-page-locked")
 })
 
 watch(
@@ -297,20 +307,57 @@ const books = ref([
 
 <style scoped>
 .profile-page {
-  min-height: 100vh;
+  height: 100vh;
   background: rgb(var(--v-theme-background));
   color: rgb(var(--v-theme-on-background));
+  overflow: hidden;
 }
 
 .page-content {
-  min-height: 100vh;
+  height: calc(100vh - 64px);
   background: rgb(var(--v-theme-background));
+  overflow: hidden;
 }
 
-.app-header {
-  background: rgb(var(--v-theme-surface)) !important;
-  color: rgb(var(--v-theme-on-surface)) !important;
-  border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.08);
+:global(html.profile-page-locked),
+:global(body.profile-page-locked) {
+  height: 100%;
+  overflow: hidden !important;
+}
+
+:global(body.profile-page-locked #app),
+:global(body.profile-page-locked .v-application),
+:global(body.profile-page-locked .v-application__wrap),
+:global(body.profile-page-locked .v-main) {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.profile-shell {
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.profile-layout-row {
+  height: 100%;
+  min-height: 0;
+}
+
+.profile-scroll-col {
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 32px;
+  scrollbar-gutter: stable;
+}
+
+.sidebar-col {
+  align-self: flex-start;
+  position: sticky;
+  top: 24px;
+  max-height: calc(100vh - 48px);
+  overflow: hidden;
 }
 
 .panel-card,
@@ -341,5 +388,25 @@ const books = ref([
 
 .gap-2 {
   gap: 8px;
+}
+
+@media (max-width: 959px) {
+  :global(html.profile-page-locked),
+  :global(body.profile-page-locked) {
+    height: auto;
+    overflow: visible !important;
+  }
+
+  .profile-page,
+  .page-content {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+
+  .profile-scroll-col {
+    height: auto;
+    overflow: visible;
+  }
 }
 </style>

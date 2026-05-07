@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import axios from 'axios'
 import HomeView from '../views/HomeView.vue'
 
 const router = createRouter({
@@ -8,11 +9,13 @@ const router = createRouter({
       path: '/home',
       name: 'home',
       component: HomeView,
+      meta: { public: true },
     },
     {
       path: '/main',
       name: 'main',
       component: () => import('../views/MainView.vue'),
+      meta: { public: true },
     },
     {
       path: '/library',
@@ -33,16 +36,19 @@ const router = createRouter({
       path: '/about',
       name: 'about',
       component: () => import('../views/AboutView.vue'),
+      meta: { public: true },
     },
     {
       path: '/register',
       name: 'register',
       component: () => import('../views/Register.vue'),
+      meta: { public: true },
     },
     {
       path: '/login',
       name: 'login',
       component: () => import('../views/LoginView.vue'),
+      meta: { public: true },
     },
     {
       path: '/profile',
@@ -52,27 +58,63 @@ const router = createRouter({
     {
       path: '/profile/:id',
       name: 'UserProfile',
-      component: () => import('@/views/UserProfileView.vue')
+      component: () => import('@/views/UserProfileView.vue'),
+      meta: { public: true },
     },
     {
       path: '/settings',
       name: 'settings',
       component: () => import('../views/SettingsView.vue'),
     },
+    {
+      path: '/admin',
+      name: 'admin',
+      component: () => import('../views/AdminView.vue'),
+      meta: {
+        requiresAdmin: true,
+      },
+    },
   ],
 })
 
-router.beforeEach((to, from, next) => {
+async function fetchCurrentUser(token) {
+  const response = await axios.get("http://127.0.0.1:8000/api/me", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  localStorage.setItem("user", JSON.stringify(response.data.user))
+  return response.data.user
+}
+
+router.beforeEach(async (to, from, next) => {
   const token = localStorage.getItem("token")
+  let user = JSON.parse(localStorage.getItem("user") || "null")
 
   const publicPages = ["/", "/login", "/register"]
-  const authRequired = !publicPages.includes(to.path)
+  const authRequired = !to.meta.public && !publicPages.includes(to.path)
 
   if (authRequired && !token) {
-    next("/login")
-  } else {
-    next()
+    next("/register")
+    return
   }
+
+  if (to.meta.requiresAdmin) {
+    try {
+      user = await fetchCurrentUser(token)
+    } catch (error) {
+      next("/login")
+      return
+    }
+
+    if (user?.role !== "admin") {
+      next("/main")
+      return
+    }
+  }
+
+  next()
 })
 
 export default router

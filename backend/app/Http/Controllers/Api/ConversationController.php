@@ -21,14 +21,17 @@ class ConversationController extends Controller
         return Conversation::with([
             'userOne',
             'userTwo',
-            'messages' => function ($query) {
-                $query->latest()->limit(1);
-            },
+            'latestMessage',
         ])
             ->where('user_one_id', $request->user()->id)
             ->orWhere('user_two_id', $request->user()->id)
             ->latest()
-            ->get();
+            ->get()
+            ->map(function (Conversation $conversation) use ($request) {
+                $conversation->has_unread_messages = $this->hasUnreadMessages($request, $conversation);
+
+                return $conversation;
+            });
     }
 
     public function showOrCreate(Request $request, User $user)
@@ -60,6 +63,8 @@ class ConversationController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
+        $this->markConversationRead($request, $conversation);
+
         return $conversation->messages()
             ->with('user')
             ->oldest()
@@ -81,7 +86,41 @@ class ConversationController extends Controller
             'message' => $data['message'],
         ]);
 
+        $this->markConversationRead($request, $conversation);
+
         return response()->json($message->load('user'), 201);
+    }
+
+    private function hasUnreadMessages(Request $request, Conversation $conversation): bool
+    {
+        $lastMessage = $conversation->latestMessage;
+
+        if (!$lastMessage || !$lastMessage->user_id || $lastMessage->user_id === $request->user()->id) {
+            return false;
+        }
+
+        $readAt = $this->readAtForUser($request, $conversation);
+
+        return !$readAt || $lastMessage->created_at->gt($readAt);
+    }
+
+    private function markConversationRead(Request $request, Conversation $conversation): void
+    {
+        $conversation->forceFill([
+            $this->readColumnForUser($request, $conversation) => now(),
+        ])->save();
+    }
+
+    private function readAtForUser(Request $request, Conversation $conversation)
+    {
+        return $conversation->{$this->readColumnForUser($request, $conversation)};
+    }
+
+    private function readColumnForUser(Request $request, Conversation $conversation): string
+    {
+        return $conversation->user_one_id === $request->user()->id
+            ? 'user_one_read_at'
+            : 'user_two_read_at';
     }
 
     private function userBelongsToConversation(Request $request, Conversation $conversation): bool

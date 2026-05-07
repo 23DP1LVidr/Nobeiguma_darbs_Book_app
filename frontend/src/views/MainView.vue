@@ -1,15 +1,15 @@
-<template>
+﻿<template>
   <div class="main-page">
     <AppHeader :user="userState.user" :initials="initials" />
 
     <v-container fluid class="pa-0 page-content">
-      <v-container class="py-6" style="max-width: 1200px;">
-        <v-row>
+      <v-container class="py-6 main-shell" style="max-width: 1200px;">
+        <v-row class="main-layout-row">
           <!-- Left Sidebar -->
-          <v-col cols="12" md="3" class="d-none d-md-block">
+          <v-col cols="12" md="3" class="d-none d-md-block sidebar-col">
             <AppSidebar :user="userState.user" :initials="initials" @logout="handleLogout" />
 
-            <v-card rounded="xl" elevation="0" class="pa-4 panel-card">
+            <v-card v-if="!isGuest" rounded="xl" elevation="0" class="pa-4 panel-card">
               <div class="text-subtitle-2 font-weight-bold mb-3">Jūsu grāmatas</div>
 
               <div class="d-flex gap-2 flex-wrap">
@@ -21,8 +21,8 @@
           </v-col>
 
           <!-- Main Content -->
-          <v-col cols="12" md="6">
-            <v-tabs v-model="activeTab" color="primary" align-tabs="start" class="mb-4">
+          <v-col cols="12" md="6" class="main-scroll-col">
+            <v-tabs v-model="activeTab" color="primary" align-tabs="start" class="main-tabs mb-4">
               <v-tab value="feed" class="text-none">
                 <v-icon start>mdi-newspaper</v-icon>
                 Plūsma
@@ -34,395 +34,49 @@
               </v-tab>
             </v-tabs>
 
-            <v-window v-model="activeTab">
-              <!-- FEED TAB -->
-              <v-window-item value="feed">
-                <v-card rounded="xl" elevation="0" class="pa-4 mb-4 content-card">
-                  <div class="d-flex align-center">
-                    <v-avatar size="40" color="primary" class="mr-3">
-                      <v-img v-if="userState.user?.avatar" :src="userState.user.avatar" />
-                      <span v-else class="text-white">{{ initials }}</span>
-                    </v-avatar>
-
-                    <v-text-field
-                      v-model="newPost"
-                      placeholder="Ko tu domā par grāmatām?"
-                      variant="outlined"
-                      density="compact"
-                      hide-details
-                      class="flex-grow-1 search-field"
-                    />
-                  </div>
-
-                  <div class="d-flex justify-end mt-3 gap-2">
-                    <v-btn variant="tonal" size="small" prepend-icon="mdi-image">Bilde</v-btn>
-                    <v-btn color="primary" size="small">Publicēt</v-btn>
-                  </div>
-                </v-card>
-
-                <v-card rounded="xl" elevation="0" class="pa-4 mb-4 content-card">
-                  <div class="d-flex align-center mb-3">
-                    <v-avatar size="40" color="secondary" class="mr-3">
-                      <span class="text-white">AK</span>
-                    </v-avatar>
-
-                    <div>
-                      <div class="text-subtitle-2 font-weight-bold">Anna Kalniņa</div>
-                      <div class="text-caption text-medium-emphasis">Pirms 2 stundām</div>
-                    </div>
-                  </div>
-
-                  <p class="text-body-1 mb-3">
-                    Tikko pabeidzu lasīt "Staburadzi" — brīnišķīga grāmata!
-                    Autentisks stāsts par Latvijas dabu un cilvēkiem. Iesaku visiem!
-                  </p>
-
-                  <v-img
-                    src="https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=600"
-                    aspect-ratio="1.8"
-                    class="rounded-lg mb-3"
-                    cover
+            <div ref="mainContentScroll" class="main-content-scroll">
+              <v-window v-model="activeTab" class="main-content-window">
+                <v-window-item value="feed">
+                  <FeedTab
+                    :user="userState.user"
+                    :initials="initials"
+                    :posts="posts"
+                    :loading="loadingPosts"
+                    :creating="creatingPost"
+                    @create="createPost"
+                    @toggle-like="togglePostLike"
+                    @comment="createPostComment"
+                    @delete-post="deletePost"
+                    @delete-comment="deleteComment"
                   />
+                </v-window-item>
 
-                  <div class="d-flex gap-4">
-                    <v-btn variant="text" size="small" prepend-icon="mdi-heart-outline">Patīk</v-btn>
-                    <v-btn variant="text" size="small" prepend-icon="mdi-comment-outline">Komentēt</v-btn>
-                    <v-btn variant="text" size="small" prepend-icon="mdi-share-variant">Kopīgot</v-btn>
-                  </div>
-                </v-card>
-
-                <v-card rounded="xl" elevation="0" class="pa-4 mb-4 content-card">
-                  <div class="d-flex align-center mb-3">
-                    <v-avatar size="40" color="teal" class="mr-3">
-                      <span class="text-white">PM</span>
-                    </v-avatar>
-
-                    <div>
-                      <div class="text-subtitle-2 font-weight-bold">Pēteris Mārtins</div>
-                      <div class="text-caption text-medium-emphasis">Pirms 5 stundām</div>
-                    </div>
-                  </div>
-
-                  <div class="d-flex mb-3">
-                    <v-img
-                      src="https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=200"
-                      width="80"
-                      height="120"
-                      class="rounded-lg mr-4"
-                      cover
-                    />
-
-                    <div>
-                      <div class="text-subtitle-1 font-weight-bold">1984</div>
-                      <div class="text-body-2 text-medium-emphasis">Džordžs Orvels</div>
-                      <v-rating :model-value="5" color="amber" density="compact" readonly size="small" />
-                    </div>
-                  </div>
-
-                  <p class="text-body-1">
-                    Otrā reize, kad lasu šo klasiku. Katru reizi atrodu ko jaunu.
-                    Grāmata par brīvību, varu un patiesību — aktuāla arī mūsdienās.
-                  </p>
-
-                  <div class="d-flex gap-4 mt-3">
-                    <v-btn variant="text" size="small" prepend-icon="mdi-heart-outline">Patīk (24)</v-btn>
-                    <v-btn variant="text" size="small" prepend-icon="mdi-comment-outline">Komentēt (8)</v-btn>
-                  </div>
-                </v-card>
-
-                <v-card rounded="xl" elevation="0" class="pa-4 mb-4 content-card">
-                  <div class="d-flex align-center mb-3">
-                    <v-avatar size="40" color="orange" class="mr-3">
-                      <span class="text-white">LV</span>
-                    </v-avatar>
-
-                    <div>
-                      <div class="text-subtitle-2 font-weight-bold">Līga Vītola</div>
-                      <div class="text-caption text-medium-emphasis">Vakar</div>
-                    </div>
-                  </div>
-
-                  <p class="text-body-1 mb-3">
-                    Meklēju kādu, kurš var iemainīt man "Mērnieks" pret citu latviešu klasiku.
-                    Interesē arī jaunākas grāmatas!
-                  </p>
-
-                  <div class="d-flex gap-4">
-                    <v-btn variant="text" size="small" prepend-icon="mdi-heart-outline">Patīk (12)</v-btn>
-                    <v-btn variant="text" size="small" prepend-icon="mdi-comment-outline">Atbildēt (3)</v-btn>
-                  </div>
-                </v-card>
-              </v-window-item>
-
-              <!-- EXCHANGE TAB -->
-              <v-window-item value="exchange">
-                <v-card rounded="xl" elevation="0" class="pa-4 mb-4 content-card">
-                  <v-row align="center">
-                    <v-col cols="12" sm="6">
-                      <v-text-field
-                        v-model="bookSearch"
-                        placeholder="Meklēt grāmatas..."
-                        prepend-inner-icon="mdi-magnify"
-                        variant="outlined"
-                        density="compact"
-                        hide-details
-                        class="search-field"
-                      />
-                    </v-col>
-
-                    <v-col cols="6" sm="3">
-                      <v-select
-                        v-model="genreFilter"
-                        :items="genres"
-                        label="Žanrs"
-                        variant="outlined"
-                        density="compact"
-                        hide-details
-                      />
-                    </v-col>
-
-                    <v-col cols="6" sm="3">
-                      <v-select
-                        v-model="conditionFilter"
-                        :items="conditions"
-                        label="Stāvoklis"
-                        variant="outlined"
-                        density="compact"
-                        hide-details
-                      />
-                    </v-col>
-                  </v-row>
-                </v-card>
-
-                <div v-if="loadingAvailableBooks" class="text-center py-10">
-                  <v-progress-circular indeterminate color="primary" />
-                </div>
-
-                <div v-else-if="paginatedExchangeBooks.length === 0" class="text-center py-10">
-                  <v-icon size="56" color="grey">mdi-book-search</v-icon>
-                  <div class="text-h6 mt-3">Nav pieejamu grāmatu</div>
-                </div>
-
-                <v-row v-else>
-                  <v-col
-                    v-for="book in paginatedExchangeBooks"
-                    :key="book.id"
-                    cols="12"
-                    sm="6"
-                  >
-                    <v-card rounded="xl" elevation="2" class="pa-4 content-card">
-                      <div class="d-flex">
-                        <v-img
-                          v-if="book.image"
-                          :src="book.image"
-                          width="100"
-                          height="150"
-                          class="rounded-lg mr-4"
-                          cover
-                        />
-
-                        <div
-                          v-else
-                          class="rounded-lg mr-4 d-flex align-center justify-center"
-                          style="width: 100px; height: 150px; background: rgba(var(--v-theme-on-surface), 0.06);"
-                        >
-                          <v-icon size="40">mdi-book-open-page-variant</v-icon>
-                        </div>
-
-                        <div class="flex-grow-1">
-                          <div class="text-subtitle-1 font-weight-bold">{{ book.title }}</div>
-                          <div class="text-body-2 text-medium-emphasis mb-2">{{ book.author }}</div>
-
-                          <v-chip v-if="book.genre" size="x-small" color="primary" variant="tonal" class="mr-1">
-                            {{ book.genre }}
-                          </v-chip>
-
-                          <v-chip v-if="book.condition" size="x-small" :color="getConditionColor(book.condition)" variant="tonal">
-                            {{ book.condition }}
-                          </v-chip>
-                        </div>
-                      </div>
-
-                      <v-divider class="my-3" />
-
-                      <div class="d-flex justify-space-between align-center">
-                        <router-link
-                          :to="`/profile/${book.user?.id}`"
-                          class="d-flex align-center owner-info text-decoration-none"
-                        >
-                          <v-avatar size="28" color="primary" class="mr-2">
-                            <v-img v-if="book.user?.avatar" :src="book.user.avatar" />
-                            <span v-else class="text-white text-caption">
-                              {{ getUserInitials(book.user) }}
-                            </span>
-                          </v-avatar>
-
-                          <div>
-                            <div class="text-caption font-weight-bold text-primary">
-                              {{ book.user?.name }} {{ book.user?.surname }}
-                            </div>
-
-                            <div class="text-caption text-medium-emphasis">
-                              {{ book.user?.city || "Pilsēta nav norādīta" }}
-                            </div>
-                          </div>
-                        </router-link>
-
-                        <v-btn size="small" color="primary" variant="tonal" @click="openExchangeDialog(book)">
-                          Apmainīties
-                        </v-btn>
-                      </div>
-                    </v-card>
-                  </v-col>
-                </v-row>
-
-                <div v-if="exchangePageCount > 1" class="d-flex justify-center mt-6">
-                  <v-pagination
-                    v-model="exchangePage"
-                    :length="exchangePageCount"
-                    total-visible="5"
-                    rounded="circle"
+                <v-window-item value="exchange">
+                  <ExchangeBooksTab
+                    :books="availableBooks"
+                    :loading="loadingAvailableBooks"
+                    :genres="genres"
+                    :conditions="conditions"
+                    @exchange="openExchangeDialog"
                   />
-                </div>
-              </v-window-item>
-            </v-window>
+                </v-window-item>
+              </v-window>
+            </div>
           </v-col>
 
           <!-- Right Sidebar -->
-          <v-col cols="12" md="3" class="d-none d-md-block">
-            <v-card rounded="xl" elevation="0" class="pa-4 mb-4 panel-card">
-              <div class="text-subtitle-1 font-weight-bold mb-3">Populāras šonedēļ</div>
-
-              <div v-for="item in trendingBooks" :key="item.title" class="d-flex align-center mb-3">
-                <v-img
-                  :src="item.image"
-                  width="50"
-                  height="70"
-                  class="rounded-lg mr-3"
-                  cover
-                />
-
-                <div>
-                  <div class="text-body-2 font-weight-bold">{{ item.title }}</div>
-                  <div class="text-caption text-medium-emphasis">{{ item.searches }} meklējumi</div>
-                </div>
-              </div>
-            </v-card>
-
-            <v-card rounded="xl" elevation="0" class="pa-4 panel-card">
-              <div class="text-subtitle-1 font-weight-bold mb-3">Ieteiktie draugi</div>
-
-              <div
-                v-for="friend in suggestedFriends"
-                :key="friend.name"
-                class="d-flex align-center justify-space-between mb-3"
-              >
-                <div class="d-flex align-center">
-                  <v-avatar size="36" :color="friend.color" class="mr-3">
-                    <span class="text-white">{{ friend.initials }}</span>
-                  </v-avatar>
-
-                  <div>
-                    <div class="text-body-2 font-weight-bold">{{ friend.name }}</div>
-                    <div class="text-caption text-medium-emphasis">{{ friend.mutual }} kopīgi draugi</div>
-                  </div>
-                </div>
-
-                <v-btn size="small" variant="text" color="primary">Pievienot</v-btn>
-              </div>
-            </v-card>
-          </v-col>
+          <MainRightSidebar class="sidebar-col" />
         </v-row>
       </v-container>
     </v-container>
-    <v-dialog v-model="showExchangeDialog" max-width="520">
-      <v-card rounded="xl" class="pa-6 content-card">
-        <div class="text-h6 font-weight-bold mb-4">Pieprasīt apmaiņu</div>
+    <ExchangeRequestDialog
+      v-model="showExchangeDialog"
+      :selected-book="selectedBook"
+      :my-books="myBooks"
+      :creating="creatingExchange"
+      @submit="createExchangeRequest"
+    />
 
-        <div class="exchange-preview mb-4">
-          <div v-if="selectedBook" class="exchange-preview-item">
-            <div class="text-body-2 text-medium-emphasis mb-2">
-              Jūs vēlaties saņemt:
-            </div>
-
-            <div class="d-flex">
-              <div class="exchange-cover mr-4">
-                <v-img
-                  v-if="selectedBook.image"
-                  :src="selectedBook.image"
-                  width="80"
-                  height="115"
-                  class="rounded"
-                  cover
-                />
-
-                <div v-else class="exchange-cover-placeholder rounded">
-                  <v-icon>mdi-book-open-page-variant</v-icon>
-                </div>
-              </div>
-
-              <div>
-                <div class="text-subtitle-1 font-weight-bold">{{ selectedBook.title }}</div>
-                <div class="text-body-2 text-medium-emphasis">{{ selectedBook.author }}</div>
-              </div>
-            </div>
-          </div>
-
-          <v-icon class="exchange-arrow" color="primary">
-            mdi-swap-horizontal
-          </v-icon>
-
-          <div v-if="selectedOfferedBook" class="exchange-preview-item">
-            <div class="text-body-2 text-medium-emphasis mb-2">
-              Jūs piedāvājat:
-            </div>
-
-            <div class="d-flex">
-              <div class="exchange-cover mr-4">
-                <v-img
-                  v-if="selectedOfferedBook.image"
-                  :src="selectedOfferedBook.image"
-                  width="80"
-                  height="115"
-                  class="rounded"
-                  cover
-                />
-
-                <div v-else class="exchange-cover-placeholder rounded">
-                  <v-icon>mdi-book-open-page-variant</v-icon>
-                </div>
-              </div>
-
-              <div>
-                <div class="text-subtitle-1 font-weight-bold">{{ selectedOfferedBook.title }}</div>
-                <div class="text-body-2 text-medium-emphasis">{{ selectedOfferedBook.author }}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <v-select
-          v-model="selectedOfferedBookId"
-          :items="myBookOptions"
-          label="Izvēlieties grāmatu, ko piedāvāt"
-          variant="outlined"
-          item-title="title"
-          item-value="id"
-          class="mb-4"
-          clearable
-        />
-
-        <div class="d-flex justify-end">
-          <v-btn variant="text" class="mr-2" @click="showExchangeDialog = false">
-            Atcelt
-          </v-btn>
-
-          <v-btn color="primary" :loading="creatingExchange" @click="createExchangeRequest">
-            Nosūtīt pieprasījumu
-          </v-btn>
-        </div>
-      </v-card>
-    </v-dialog>
 
     <v-snackbar v-model="showSnackbar" :color="snackbarColor" timeout="3000">
       {{ snackbarMessage }}
@@ -466,12 +120,16 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from "vue"
+import { computed, onBeforeUnmount, ref, onMounted, watch } from "vue"
 import axios from "axios"
 import { useRouter } from "vue-router"
 import { userState, initials, logout } from "@/stores/userStore"
 import AppHeader from "@/components/layout/AppHeader.vue"
 import AppSidebar from "@/components/layout/AppSidebar.vue"
+import FeedTab from "@/components/main/FeedTab.vue"
+import ExchangeBooksTab from "@/components/main/ExchangeBooksTab.vue"
+import ExchangeRequestDialog from "@/components/main/ExchangeRequestDialog.vue"
+import MainRightSidebar from "@/components/main/MainRightSidebar.vue"
 
 const router = useRouter()
 
@@ -487,14 +145,54 @@ function authHeaders() {
   }
 }
 
+const isGuest = computed(() => !localStorage.getItem("token"))
+
+function requestConfig() {
+  return isGuest.value ? {} : { headers: authHeaders() }
+}
+
+function requireAuth() {
+  if (!isGuest.value) return true
+
+  router.push("/register")
+  return false
+}
+
 const showProfileReminder = ref(false)
+const mainContentScroll = ref(null)
 
 onMounted(() => {
-  fetchAvailableBooks()
-  fetchMyBooks()
+  document.documentElement.classList.add("main-page-locked")
+  document.body.classList.add("main-page-locked")
+
+  // Add global scroll listener to allow scrolling from any part of the page
+  const handleWheel = (event) => {
+    // Skip if the event target is inside scrollable elements that should handle their own scrolling
+    if (event.target.closest('.v-menu, .v-dialog, .v-overlay, .v-select__menu, .v-autocomplete__menu')) {
+      return
+    }
+
+    // Prevent default page scrolling
+    event.preventDefault()
+
+    // Scroll the main content area instead
+    if (mainContentScroll.value) {
+      mainContentScroll.value.scrollTop += event.deltaY
+    }
+  }
+
+  document.addEventListener('wheel', handleWheel, { passive: false })
+
+  // Store the listener for cleanup
+  window.mainPageWheelListener = handleWheel
+
+  fetchPosts()
+  if (!isGuest.value) {
+    fetchMyBooks()
+  }
 
   const alreadyShown = localStorage.getItem("profile_reminder_shown")
-  if (!alreadyShown) {
+  if (!alreadyShown && !isGuest.value) {
     const user = userState.user
 
     if (!user?.city || !user?.about || !user?.avatar) {
@@ -503,19 +201,24 @@ onMounted(() => {
     }
   }
 })
+
+onBeforeUnmount(() => {
+  document.documentElement.classList.remove("main-page-locked")
+  document.body.classList.remove("main-page-locked")
+
+  // Clean up the global scroll listener
+  if (window.mainPageWheelListener) {
+    document.removeEventListener('wheel', window.mainPageWheelListener)
+    window.mainPageWheelListener = null
+  }
+})
 const activeTab = ref("feed")
 
 watch(activeTab, (tab) => {
-  if (tab === "exchange") {
+  if (tab === "exchange" && !loadedAvailableBooks.value) {
     fetchAvailableBooks()
   }
 })
-
-const newPost = ref("")
-
-const bookSearch = ref("")
-const genreFilter = ref("Visi")
-const conditionFilter = ref("Visi")
 
 const genres = [
   "Visi",
@@ -540,18 +243,141 @@ const conditions = [
 
 const availableBooks = ref([])
 const loadingAvailableBooks = ref(false)
-const exchangePage = ref(1)
-const booksPerPage = 20
+const loadedAvailableBooks = ref(false)
+
+const posts = ref([])
+const loadingPosts = ref(false)
+const creatingPost = ref(false)
+
+async function fetchPosts() {
+  loadingPosts.value = true
+
+  try {
+    const response = await axios.get(`${API_URL}/posts`, requestConfig())
+
+    posts.value = response.data
+  } catch (error) {
+    console.error(error)
+    showMessage("Neizdevās ielādēt ierakstus.", "error")
+  } finally {
+    loadingPosts.value = false
+  }
+}
+
+async function createPost(post) {
+  if (!requireAuth()) return
+
+  creatingPost.value = true
+
+  try {
+    const response = await axios.post(
+      `${API_URL}/posts`,
+      {
+        content: post.content,
+        image: post.image,
+      },
+      {
+        headers: authHeaders(),
+      }
+    )
+
+    posts.value = [response.data, ...posts.value]
+    showMessage("Ieraksts publicēts.", "success")
+  } catch (error) {
+    console.error(error)
+    showMessage(error.response?.data?.message || "Neizdevās publicēt ierakstu.", "error")
+  } finally {
+    creatingPost.value = false
+  }
+}
+
+async function togglePostLike(post) {
+  if (!requireAuth()) return
+
+  try {
+    const response = await axios.post(
+      `${API_URL}/posts/${post.id}/like`,
+      {},
+      {
+        headers: authHeaders(),
+      }
+    )
+
+    replacePost(response.data)
+  } catch (error) {
+    console.error(error)
+    showMessage("Neizdevās atjaunināt patīk atzīmi.", "error")
+  }
+}
+
+async function createPostComment({ post, content }) {
+  if (!requireAuth()) return
+
+  try {
+    const response = await axios.post(
+      `${API_URL}/posts/${post.id}/comments`,
+      { content },
+      {
+        headers: authHeaders(),
+      }
+    )
+
+    replacePost(response.data)
+  } catch (error) {
+    console.error(error)
+    showMessage("Neizdevās pievienot komentāru.", "error")
+  }
+}
+
+async function deletePost(post) {
+  if (!requireAuth()) return
+
+  try {
+    await axios.delete(`${API_URL}/posts/${post.id}`, {
+      headers: authHeaders(),
+    })
+
+    posts.value = posts.value.filter((item) => item.id !== post.id)
+    showMessage("Ieraksts dzēsts.", "success")
+  } catch (error) {
+    console.error(error)
+    showMessage(error.response?.data?.message || "Neizdevās dzēst ierakstu.", "error")
+  }
+}
+
+async function deleteComment({ post, comment }) {
+  if (!requireAuth()) return
+
+  try {
+    const response = await axios.delete(
+      `${API_URL}/posts/${post.id}/comments/${comment.id}`,
+      {
+        headers: authHeaders(),
+      }
+    )
+
+    replacePost(response.data)
+    showMessage("Komentārs dzēsts.", "success")
+  } catch (error) {
+    console.error(error)
+    showMessage(error.response?.data?.message || "Neizdevās dzēst komentāru.", "error")
+  }
+}
+
+function replacePost(updatedPost) {
+  posts.value = posts.value.map((post) => {
+    return post.id === updatedPost.id ? updatedPost : post
+  })
+}
 
 async function fetchAvailableBooks() {
   loadingAvailableBooks.value = true
 
   try {
-    const response = await axios.get(`${API_URL}/books/available`, {
-      headers: authHeaders(),
-    })
+    const response = await axios.get(`${API_URL}/books/available`, requestConfig())
 
     availableBooks.value = response.data
+    loadedAvailableBooks.value = true
   } catch (error) {
     console.error(error)
   } finally {
@@ -559,63 +385,8 @@ async function fetchAvailableBooks() {
   }
 }
 
-const filteredExchangeBooks = computed(() => {
-  let result = [...availableBooks.value]
-
-  const search = bookSearch.value.trim().toLowerCase()
-
-  if (search) {
-    result = result.filter((book) => {
-      return (
-        book.title?.toLowerCase().includes(search) ||
-        book.author?.toLowerCase().includes(search) ||
-        book.genre?.toLowerCase().includes(search)
-      )
-    })
-  }
-
-  if (genreFilter.value !== "Visi") {
-    result = result.filter((book) => book.genre === genreFilter.value)
-  }
-
-  if (conditionFilter.value !== "Visi") {
-    result = result.filter((book) => book.condition === conditionFilter.value)
-  }
-
-  return result
-})
-
-const exchangePageCount = computed(() => {
-  return Math.ceil(filteredExchangeBooks.value.length / booksPerPage)
-})
-
-const paginatedExchangeBooks = computed(() => {
-  const start = (exchangePage.value - 1) * booksPerPage
-  return filteredExchangeBooks.value.slice(start, start + booksPerPage)
-})
-
-watch([bookSearch, genreFilter, conditionFilter], () => {
-  exchangePage.value = 1
-})
-
-function getConditionColor(condition) {
-  const colors = {
-    Jauna: "success",
-    "Labā stāvoklī": "primary",
-    "Vidējā stāvoklī": "warning",
-    "Sliktā stāvoklī": "error",
-  }
-
-  return colors[condition] || "grey"
-}
-
-function getUserInitials(user) {
-  return `${user?.name?.[0] || ""}${user?.surname?.[0] || ""}`.toUpperCase() || "U"
-}
-
 const showExchangeDialog = ref(false)
 const selectedBook = ref(null)
-const selectedOfferedBookId = ref(null)
 const creatingExchange = ref(false)
 
 const myBooks = ref([])
@@ -624,14 +395,10 @@ const showSnackbar = ref(false)
 const snackbarMessage = ref("")
 const snackbarColor = ref("success")
 
-const myBookOptions = computed(() => {
-  return myBooks.value.map((book) => ({
-    id: book.id,
-    title: `${book.title} — ${book.author}`,
-  }))
-})
 
 async function fetchMyBooks() {
+  if (isGuest.value) return
+
   try {
     const response = await axios.get(`${API_URL}/books`, {
       headers: authHeaders(),
@@ -644,22 +411,24 @@ async function fetchMyBooks() {
 }
 
 function openExchangeDialog(book) {
+  if (!requireAuth()) return
+
   selectedBook.value = book
-  selectedOfferedBookId.value = null
   showExchangeDialog.value = true
 }
 
-async function createExchangeRequest() {
+async function createExchangeRequest(offeredBookId) {
+  if (!requireAuth()) return
   if (!selectedBook.value) return
 
   creatingExchange.value = true
 
   try {
-    const response = await axios.post(
+    await axios.post(
       `${API_URL}/exchanges`,
       {
         requested_book_id: selectedBook.value.id,
-        offered_book_id: selectedOfferedBookId.value,
+        offered_book_id: offeredBookId,
       },
       {
         headers: authHeaders(),
@@ -682,9 +451,6 @@ async function createExchangeRequest() {
   }
 }
 
-const selectedOfferedBook = computed(() => {
-  return myBooks.value.find((book) => book.id === selectedOfferedBookId.value) || null
-})
 
 function showMessage(message, color = "success") {
   snackbarMessage.value = message
@@ -692,93 +458,107 @@ function showMessage(message, color = "success") {
   showSnackbar.value = true
 }
 
-const trendingBooks = [
-  {
-    title: "Staburadis",
-    searches: 12,
-    image: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=80",
-  },
-  {
-    title: "1984",
-    searches: 8,
-    image: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=80",
-  },
-]
-
-const suggestedFriends = [
-  { name: "Māris R.", initials: "MR", mutual: 8, color: "pink" },
-  { name: "Elīna L.", initials: "EL", mutual: 5, color: "indigo" },
-]
 </script>
 
 <style scoped>
+:global(html.main-page-locked),
+:global(body.main-page-locked) {
+  height: 100%;
+  overflow: hidden !important;
+}
+
+:global(body.main-page-locked #app),
+:global(body.main-page-locked .v-application),
+:global(body.main-page-locked .v-application__wrap),
+:global(body.main-page-locked .v-main) {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .main-page {
-  min-height: 100vh;
+  height: 100vh;
   background: rgb(var(--v-theme-background));
   color: rgb(var(--v-theme-on-background));
+  overflow: hidden;
 }
 
 .page-content {
-  min-height: 100vh;
+  height: calc(100vh - 64px);
   background: rgb(var(--v-theme-background));
+  overflow: hidden;
 }
 
-.app-header {
-  background: rgb(var(--v-theme-surface)) !important;
-  color: rgb(var(--v-theme-on-surface)) !important;
+.main-shell {
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.main-layout-row {
+  height: 100%;
+  min-height: 0;
+}
+
+.main-scroll-col {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-tabs {
+  flex: 0 0 auto;
+  z-index: 5;
+  background: rgb(var(--v-theme-background));
   border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.08);
 }
 
-.exchange-preview {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  gap: 16px;
-  align-items: center;
+.main-content-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-top: 16px;
+  padding-bottom: 32px;
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
 }
 
-.exchange-preview-item {
-  min-width: 0;
+.sidebar-col {
+  align-self: flex-start;
+  position: sticky;
+  top: 24px;
+  max-height: calc(100vh - 48px);
+  overflow: hidden;
 }
 
-.exchange-arrow {
-  margin-top: 28px;
-}
-
-.exchange-cover {
-  width: 80px;
-  min-width: 80px;
-  height: 115px;
-}
-
-.exchange-cover-placeholder {
-  width: 80px;
-  height: 115px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(var(--v-theme-on-surface), 0.06);
-}
-
-.owner-info {
-  min-width: 0;
-}
-
-.panel-card,
-.content-card {
+.panel-card {
   background: rgb(var(--v-theme-surface)) !important;
   color: rgb(var(--v-theme-on-surface)) !important;
   border: 1px solid rgba(var(--v-theme-on-surface), 0.08);
-}
-
-.search-field :deep(.v-field) {
-  background: rgba(var(--v-theme-on-surface), 0.05);
 }
 
 .gap-2 {
   gap: 8px;
 }
 
-.gap-4 {
-  gap: 16px;
+@media (max-width: 959px) {
+  .main-page,
+  .page-content {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+
+  .main-scroll-col {
+    height: auto;
+    overflow: visible;
+    display: block;
+  }
+
+  .main-content-scroll {
+    overflow: visible;
+    padding-top: 0;
+  }
 }
 </style>

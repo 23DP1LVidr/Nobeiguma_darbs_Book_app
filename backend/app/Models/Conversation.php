@@ -9,7 +9,17 @@ class Conversation extends Model
     protected $fillable = [
         'user_one_id',
         'user_two_id',
+        'user_one_read_at',
+        'user_two_read_at',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'user_one_read_at' => 'datetime',
+            'user_two_read_at' => 'datetime',
+        ];
+    }
 
     public function userOne()
     {
@@ -24,5 +34,10 @@ class Conversation extends Model
     public function messages()
     {
         return $this->hasMany(ConversationMessage::class);
+    }
+
+    public function latestMessage()
+    {
+        return $this->hasOne(ConversationMessage::class)->latestOfMany();
     }
 }

@@ -24,6 +24,7 @@ class User extends Authenticatable
         'username',
         'email',
         'password',
+        'role',
         'city',
         'about',
         'avatar',
@@ -55,5 +56,10 @@ class User extends Authenticatable
     public function books()
     {
         return $this->hasMany(Book::class);
+    }
+
+    public function posts()
+    {
+        return $this->hasMany(Post::class);
     }
 }

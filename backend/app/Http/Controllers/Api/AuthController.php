@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\ImageStorage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -84,6 +85,13 @@ class AuthController extends Controller
         ]);
     }
 
+    public function me(Request $request)
+    {
+        return response()->json([
+            'user' => $request->user(),
+        ]);
+    }
+
     // Update authenticated user's profile
     public function updateProfile(Request $request)
     {
@@ -98,10 +106,42 @@ class AuthController extends Controller
 
         // Update current user
         $user = $request->user();
+        $data['avatar'] = ImageStorage::storeDataUrl(
+            $data['avatar'] ?? null,
+            'avatars',
+            $request->getSchemeAndHttpHost(),
+            $user->avatar
+        );
+
         $user->update($data);
 
         return response()->json([
             'user' => $user,
+        ]);
+    }
+
+    // Update authenticated user's password
+    public function updatePassword(Request $request)
+    {
+        $data = $request->validate([
+            'current_password' => ['required', 'string'],
+            'password' => ['required', 'string', 'min:6', 'confirmed'],
+        ]);
+
+        $user = $request->user();
+
+        if (! Hash::check($data['current_password'], $user->password)) {
+            throw ValidationException::withMessages([
+                'current_password' => ['Pašreizējā parole nav pareiza.'],
+            ]);
+        }
+
+        $user->update([
+            'password' => Hash::make($data['password']),
+        ]);
+
+        return response()->json([
+            'message' => 'Parole atjaunināta.',
         ]);
     }
 

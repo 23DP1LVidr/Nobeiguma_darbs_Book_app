@@ -117,14 +117,20 @@
 import { computed } from "vue"
 
 const props = defineProps({
-  exchange: Object,
-  currentUserId: [Number, String],
+  exchange: {
+    type: Object,
+    required: true,
+  },
+  currentUserId: {
+    type: [Number, String],
+    required: true,
+  },
   pending: Boolean,
   active: Boolean,
   completed: Boolean,
 })
 
-const emit = defineEmits(["accept", "reject", "cancel", "complete"])
+defineEmits(["accept", "reject", "cancel", "complete"])
 
 const currentUserId = computed(() => Number(props.currentUserId))
 const exchangeOwnerId = computed(() => Number(props.exchange.owner_id))
@@ -174,6 +180,12 @@ function initialsFor(user) {
 </script>
 
 <style scoped>
+.content-card {
+  background: rgb(var(--v-theme-surface)) !important;
+  color: rgb(var(--v-theme-on-surface)) !important;
+  border: 1px solid rgba(var(--v-theme-on-surface), 0.08);
+}
+
 .exchange-books {
   display: flex;
   align-items: center;
