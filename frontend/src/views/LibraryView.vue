@@ -1,15 +1,15 @@
 <template>
-  <div ref="libraryPage" class="library-page">
+  <div ref="libraryPage" class="locked-page">
     <AppHeader :user="user" :initials="initials" />
 
-    <v-container fluid class="pa-0 page-content">
-      <v-container class="py-6 library-shell" style="max-width: 1200px;">
-        <v-row class="library-layout-row">
-          <v-col cols="12" md="3" class="d-none d-md-block sidebar-col">
+    <v-container fluid class="pa-0 locked-page__content">
+      <v-container class="py-6 locked-page__shell" style="max-width: 1200px;">
+        <v-row class="locked-page__row">
+          <v-col cols="12" md="3" class="d-none d-md-block locked-page__side">
             <AppSidebar :user="user" :initials="initials" @logout="logoutUser" />
           </v-col>
 
-          <v-col ref="libraryScroll" cols="12" md="6" class="library-scroll-col">
+          <v-col ref="libraryScroll" cols="12" md="6" class="locked-page__scroll">
             <LibraryBooksSection
               :books="books"
               :loading="loadingBooks"
@@ -19,7 +19,7 @@
             />
           </v-col>
 
-          <LibraryActivitySidebar class="sidebar-col" :books="books" />
+          <LibraryActivitySidebar class="locked-page__side" :books="books" />
         </v-row>
       </v-container>
     </v-container>
@@ -50,10 +50,11 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from "vue"
+import { computed, onMounted, ref } from "vue"
 import axios from "axios"
 import { useRouter } from "vue-router"
 import { API_URL } from "@/services/api"
+import { usePageLock } from "@/composables/usePageLock"
 import { useScrollForwarding } from "@/composables/useScrollForwarding"
 import AppHeader from "@/components/layout/AppHeader.vue"
 import AppSidebar from "@/components/layout/AppSidebar.vue"
@@ -64,6 +65,8 @@ import LibraryBooksSection from "@/components/library/LibraryBooksSection.vue"
 const router = useRouter()
 const libraryPage = ref(null)
 const libraryScroll = ref(null)
+
+usePageLock()
 
 useScrollForwarding({
   source: libraryPage,
@@ -124,15 +127,7 @@ const snackbarMessage = ref("")
 const snackbarColor = ref("success")
 
 onMounted(() => {
-  document.documentElement.classList.add("library-page-locked")
-  document.body.classList.add("library-page-locked")
-
   fetchBooks()
-})
-
-onBeforeUnmount(() => {
-  document.documentElement.classList.remove("library-page-locked")
-  document.body.classList.remove("library-page-locked")
 })
 
 async function fetchBooks() {
@@ -248,79 +243,3 @@ function showMessage(message, color = "success") {
   showSnackbar.value = true
 }
 </script>
-
-<style scoped>
-:global(html.library-page-locked),
-:global(body.library-page-locked) {
-  height: 100%;
-  overflow: hidden !important;
-}
-
-:global(body.library-page-locked #app),
-:global(body.library-page-locked .v-application),
-:global(body.library-page-locked .v-application__wrap),
-:global(body.library-page-locked .v-main) {
-  height: 100%;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.library-page {
-  height: 100vh;
-  background: rgb(var(--v-theme-background));
-  color: rgb(var(--v-theme-on-background));
-  overflow: hidden;
-}
-
-.page-content {
-  height: calc(100vh - 64px);
-  background: rgb(var(--v-theme-background));
-  overflow: hidden;
-}
-
-.library-shell {
-  height: 100%;
-  box-sizing: border-box;
-}
-
-.library-layout-row {
-  height: 100%;
-  min-height: 0;
-}
-
-.library-scroll-col {
-  height: 100%;
-  min-height: 0;
-  overflow-y: auto;
-  padding-bottom: 32px;
-  scrollbar-gutter: stable;
-}
-
-.sidebar-col {
-  align-self: flex-start;
-  position: sticky;
-  top: 24px;
-  max-height: calc(100vh - 48px);
-  overflow: hidden;
-}
-
-@media (max-width: 959px) {
-  :global(html.library-page-locked),
-  :global(body.library-page-locked) {
-    height: auto;
-    overflow: visible !important;
-  }
-
-  .library-page,
-  .page-content {
-    height: auto;
-    min-height: 100vh;
-    overflow: visible;
-  }
-
-  .library-scroll-col {
-    height: auto;
-    overflow: visible;
-  }
-}
-</style>

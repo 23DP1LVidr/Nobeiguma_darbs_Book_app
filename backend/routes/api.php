@@ -11,7 +11,6 @@ use App\Http\Controllers\Api\PostController;
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/posts', [PostController::class, 'index']);
-Route::get('/books/available', [BookController::class, 'available']);
 Route::get('/users/{user}', [AuthController::class, 'showUser']);
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -30,6 +29,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/books', [BookController::class, 'store']);
     Route::put('/books/{book}', [BookController::class, 'update']);
     Route::delete('/books/{book}', [BookController::class, 'destroy']);
+    Route::get('/books/available', [BookController::class, 'available']);
     Route::get('/exchanges', [ExchangeController::class, 'index']);
     Route::post('/exchanges', [ExchangeController::class, 'store']);
     Route::put('/exchanges/{exchange}/accept', [ExchangeController::class, 'accept']);

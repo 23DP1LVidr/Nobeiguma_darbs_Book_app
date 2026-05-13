@@ -13,6 +13,12 @@ return new class extends Migration
     {
         Schema::create('exchanges', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('conversation_id')->nullable()->constrained('conversations')->nullOnDelete();
+            $table->foreignId('requester_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('owner_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('requested_book_id')->constrained('books')->cascadeOnDelete();
+            $table->foreignId('offered_book_id')->nullable()->constrained('books')->nullOnDelete();
+            $table->string('status')->default('pending');
             $table->timestamps();
         });
     }

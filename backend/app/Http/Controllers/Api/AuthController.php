@@ -14,11 +14,15 @@ class AuthController extends Controller
     // Register a new user
     public function register(Request $request)
     {
+        $request->merge([
+            'username' => strtolower(trim((string) $request->input('username'))),
+        ]);
+
         // Validate incoming registration data
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'surname' => ['required', 'string', 'max:255'],
-            'username' => ['required', 'string', 'max:255', 'unique:users,username'],
+            'username' => ['required', 'string', 'max:255', 'regex:/^[a-z0-9._]+$/', 'unique:users,username'],
             'email' => ['required', 'email', 'unique:users,email'],
             'password' => ['required', 'min:6'],
         ]);

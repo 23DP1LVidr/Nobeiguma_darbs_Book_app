@@ -1,12 +1,12 @@
 <template>
-  <div class="exchanges-page">
+  <div class="locked-page">
     <AppHeader :user="user" :initials="initials" />
 
-    <v-container fluid class="pa-0 page-content">
-      <v-container class="py-6 exchanges-shell" style="max-width: 1200px;">
-        <v-row class="exchanges-layout-row">
+    <v-container fluid class="pa-0 locked-page__content">
+      <v-container class="py-6 locked-page__shell" style="max-width: 1200px;">
+        <v-row class="locked-page__row">
           <ExchangeStatsSidebar
-            class="sidebar-col"
+            class="locked-page__side"
             :user="user"
             :initials="initials"
             :pending-count="pendingExchanges.length"
@@ -15,7 +15,7 @@
             @logout="logoutUser"
           />
 
-          <v-col cols="12" md="6" class="exchanges-scroll-col">
+          <v-col cols="12" md="6" class="locked-page__scroll">
             <ExchangeListPanel
               :pending-exchanges="pendingExchanges"
               :active-exchanges="activeExchanges"
@@ -29,7 +29,7 @@
             />
           </v-col>
 
-          <ExchangeQuickActions class="sidebar-col" />
+          <ExchangeQuickActions class="locked-page__side" />
         </v-row>
       </v-container>
     </v-container>
@@ -41,16 +41,19 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from "vue"
+import { computed, onMounted, ref } from "vue"
 import axios from "axios"
 import { useRouter } from "vue-router"
 import { API_URL } from "@/services/api"
+import { usePageLock } from "@/composables/usePageLock"
 import AppHeader from "@/components/layout/AppHeader.vue"
 import ExchangeListPanel from "@/components/exchanges/ExchangeListPanel.vue"
 import ExchangeQuickActions from "@/components/exchanges/ExchangeQuickActions.vue"
 import ExchangeStatsSidebar from "@/components/exchanges/ExchangeStatsSidebar.vue"
 
 const router = useRouter()
+
+usePageLock()
 
 const user = ref(JSON.parse(localStorage.getItem("user")) || null)
 const exchanges = ref([])
@@ -79,15 +82,8 @@ const completedExchanges = computed(() =>
 )
 
 onMounted(() => {
-  document.documentElement.classList.add("exchanges-page-locked")
-  document.body.classList.add("exchanges-page-locked")
   localStorage.setItem("exchanges_seen_at", String(Date.now()))
   fetchExchanges()
-})
-
-onBeforeUnmount(() => {
-  document.documentElement.classList.remove("exchanges-page-locked")
-  document.body.classList.remove("exchanges-page-locked")
 })
 
 function authHeaders() {
@@ -190,79 +186,3 @@ function showMessage(message, color = "success") {
   showSnackbar.value = true
 }
 </script>
-
-<style scoped>
-:global(html.exchanges-page-locked),
-:global(body.exchanges-page-locked) {
-  height: 100%;
-  overflow: hidden !important;
-}
-
-:global(body.exchanges-page-locked #app),
-:global(body.exchanges-page-locked .v-application),
-:global(body.exchanges-page-locked .v-application__wrap),
-:global(body.exchanges-page-locked .v-main) {
-  height: 100%;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.exchanges-page {
-  height: 100vh;
-  background: rgb(var(--v-theme-background));
-  color: rgb(var(--v-theme-on-background));
-  overflow: hidden;
-}
-
-.page-content {
-  height: calc(100vh - 64px);
-  background: rgb(var(--v-theme-background));
-  overflow: hidden;
-}
-
-.exchanges-shell {
-  height: 100%;
-  box-sizing: border-box;
-}
-
-.exchanges-layout-row {
-  height: 100%;
-  min-height: 0;
-}
-
-.exchanges-scroll-col {
-  height: 100%;
-  min-height: 0;
-  overflow-y: auto;
-  padding-bottom: 32px;
-  scrollbar-gutter: stable;
-}
-
-.sidebar-col {
-  align-self: flex-start;
-  position: sticky;
-  top: 24px;
-  max-height: calc(100vh - 48px);
-  overflow: hidden;
-}
-
-@media (max-width: 959px) {
-  :global(html.exchanges-page-locked),
-  :global(body.exchanges-page-locked) {
-    height: auto;
-    overflow: visible !important;
-  }
-
-  .exchanges-page,
-  .page-content {
-    height: auto;
-    min-height: 100vh;
-    overflow: visible;
-  }
-
-  .exchanges-scroll-col {
-    height: auto;
-    overflow: visible;
-  }
-}
-</style>

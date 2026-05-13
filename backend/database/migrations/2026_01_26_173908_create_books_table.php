@@ -16,9 +16,15 @@ return new class extends Migration
             $table->string('author');
             $table->string('genre')->nullable();
             $table->string('condition')->nullable();
-            $table->string('image')->nullable();
+            $table->string('image', 2048)->nullable();
+            $table->boolean('is_available')->default(true);
 
             $table->timestamps();
         });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('books');
     }
 };

@@ -13,6 +13,8 @@ return new class extends Migration
 
             $table->foreignId('user_one_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('user_two_id')->constrained('users')->cascadeOnDelete();
+            $table->timestamp('user_one_read_at')->nullable();
+            $table->timestamp('user_two_read_at')->nullable();
 
             $table->timestamps();
 

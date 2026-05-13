@@ -1,27 +1,50 @@
 ﻿<template>
-  <div ref="mainPage" class="main-page">
+  <div ref="mainPage" class="locked-page">
     <AppHeader :user="userState.user" :initials="initials" />
 
-    <v-container fluid class="pa-0 page-content">
-      <v-container class="py-6 main-shell" style="max-width: 1200px;">
-        <v-row class="main-layout-row">
+    <v-container fluid class="pa-0 locked-page__content">
+      <v-container class="py-6 locked-page__shell" style="max-width: 1200px;">
+        <v-row class="locked-page__row">
           <!-- Left Sidebar -->
-          <v-col cols="12" md="3" class="d-none d-md-block sidebar-col">
+          <v-col cols="12" md="3" class="d-none d-md-block locked-page__side">
             <AppSidebar :user="userState.user" :initials="initials" @logout="handleLogout" />
 
             <v-card v-if="!isGuest" rounded="xl" elevation="0" class="pa-4 panel-card">
               <div class="text-subtitle-2 font-weight-bold mb-3">Jūsu grāmatas</div>
 
-              <div class="d-flex gap-2 flex-wrap">
-                <v-chip size="small" color="primary" variant="tonal">Fantāzija (4)</v-chip>
-                <v-chip size="small" color="secondary" variant="tonal">Detektīvs (3)</v-chip>
-                <v-chip size="small" color="grey" variant="tonal">Zinātne (2)</v-chip>
+              <div v-if="loadingMyBooks" class="py-2">
+                <v-progress-circular indeterminate color="primary" size="22" />
+              </div>
+
+              <div v-else-if="myBookStats.length" class="d-flex gap-2 flex-wrap">
+                <v-chip
+                  v-for="stat in myBookStats"
+                  :key="stat.genre"
+                  size="small"
+                  :color="stat.color"
+                  variant="tonal"
+                >
+                  {{ stat.genre }} ({{ stat.count }})
+                </v-chip>
+              </div>
+
+              <div v-else class="text-body-2 text-medium-emphasis">
+                Tev vēl nav pievienotu grāmatu.
+                <v-btn
+                  to="/library"
+                  variant="text"
+                  color="primary"
+                  size="small"
+                  class="px-0 mt-1"
+                >
+                  Pievienot grāmatas
+                </v-btn>
               </div>
             </v-card>
           </v-col>
 
           <!-- Main Content -->
-          <v-col cols="12" md="6" class="main-scroll-col">
+          <v-col cols="12" md="6" class="locked-page__scroll locked-page__scroll--framed">
             <v-tabs v-model="activeTab" color="primary" align-tabs="start" class="main-tabs mb-4">
               <v-tab value="feed" class="text-none">
                 <v-icon start>mdi-newspaper</v-icon>
@@ -65,7 +88,7 @@
           </v-col>
 
           <!-- Right Sidebar -->
-          <MainRightSidebar class="sidebar-col" />
+          <MainRightSidebar class="locked-page__side" />
         </v-row>
       </v-container>
     </v-container>
@@ -120,11 +143,12 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, ref, onMounted, watch } from "vue"
+import { computed, ref, onMounted, watch } from "vue"
 import axios from "axios"
 import { useRouter } from "vue-router"
 import { userState, initials, logout } from "@/stores/userStore"
 import { API_URL } from "@/services/api"
+import { usePageLock } from "@/composables/usePageLock"
 import { useScrollForwarding } from "@/composables/useScrollForwarding"
 import AppHeader from "@/components/layout/AppHeader.vue"
 import AppSidebar from "@/components/layout/AppSidebar.vue"
@@ -136,6 +160,8 @@ import MainRightSidebar from "@/components/main/MainRightSidebar.vue"
 const router = useRouter()
 const mainPage = ref(null)
 const mainContentScroll = ref(null)
+
+usePageLock()
 
 useScrollForwarding({
   source: mainPage,
@@ -168,9 +194,6 @@ function requireAuth() {
 const showProfileReminder = ref(false)
 
 onMounted(() => {
-  document.documentElement.classList.add("main-page-locked")
-  document.body.classList.add("main-page-locked")
-
   fetchPosts()
   if (!isGuest.value) {
     fetchMyBooks()
@@ -187,13 +210,14 @@ onMounted(() => {
   }
 })
 
-onBeforeUnmount(() => {
-  document.documentElement.classList.remove("main-page-locked")
-  document.body.classList.remove("main-page-locked")
-})
 const activeTab = ref("feed")
 
 watch(activeTab, (tab) => {
+  if (tab === "exchange" && !requireAuth()) {
+    activeTab.value = "feed"
+    return
+  }
+
   if (tab === "exchange" && !loadedAvailableBooks.value) {
     fetchAvailableBooks()
   }
@@ -369,6 +393,26 @@ const selectedBook = ref(null)
 const creatingExchange = ref(false)
 
 const myBooks = ref([])
+const loadingMyBooks = ref(false)
+
+const chipColors = ["primary", "secondary", "success", "warning", "info", "grey"]
+
+const myBookStats = computed(() => {
+  const counts = myBooks.value.reduce((result, book) => {
+    const genre = book.genre || "Bez žanra"
+    result[genre] = (result[genre] || 0) + 1
+    return result
+  }, {})
+
+  return Object.entries(counts)
+    .map(([genre, count], index) => ({
+      genre,
+      count,
+      color: chipColors[index % chipColors.length],
+    }))
+    .sort((a, b) => b.count - a.count || a.genre.localeCompare(b.genre))
+    .slice(0, 6)
+})
 
 const showSnackbar = ref(false)
 const snackbarMessage = ref("")
@@ -378,6 +422,8 @@ const snackbarColor = ref("success")
 async function fetchMyBooks() {
   if (isGuest.value) return
 
+  loadingMyBooks.value = true
+
   try {
     const response = await axios.get(`${API_URL}/books`, {
       headers: authHeaders(),
@@ -386,6 +432,8 @@ async function fetchMyBooks() {
     myBooks.value = response.data
   } catch (error) {
     console.error(error)
+  } finally {
+    loadingMyBooks.value = false
   }
 }
 
@@ -440,52 +488,6 @@ function showMessage(message, color = "success") {
 </script>
 
 <style scoped>
-:global(html.main-page-locked),
-:global(body.main-page-locked) {
-  height: 100%;
-  overflow: hidden !important;
-}
-
-:global(body.main-page-locked #app),
-:global(body.main-page-locked .v-application),
-:global(body.main-page-locked .v-application__wrap),
-:global(body.main-page-locked .v-main) {
-  height: 100%;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.main-page {
-  height: 100vh;
-  background: rgb(var(--v-theme-background));
-  color: rgb(var(--v-theme-on-background));
-  overflow: hidden;
-}
-
-.page-content {
-  height: calc(100vh - 64px);
-  background: rgb(var(--v-theme-background));
-  overflow: hidden;
-}
-
-.main-shell {
-  height: 100%;
-  box-sizing: border-box;
-}
-
-.main-layout-row {
-  height: 100%;
-  min-height: 0;
-}
-
-.main-scroll-col {
-  height: 100%;
-  min-height: 0;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
 .main-tabs {
   flex: 0 0 auto;
   z-index: 5;
@@ -503,14 +505,6 @@ function showMessage(message, color = "success") {
   overscroll-behavior: contain;
 }
 
-.sidebar-col {
-  align-self: flex-start;
-  position: sticky;
-  top: 24px;
-  max-height: calc(100vh - 48px);
-  overflow: hidden;
-}
-
 .panel-card {
   background: rgb(var(--v-theme-surface)) !important;
   color: rgb(var(--v-theme-on-surface)) !important;
@@ -522,19 +516,6 @@ function showMessage(message, color = "success") {
 }
 
 @media (max-width: 959px) {
-  .main-page,
-  .page-content {
-    height: auto;
-    min-height: 100vh;
-    overflow: visible;
-  }
-
-  .main-scroll-col {
-    height: auto;
-    overflow: visible;
-    display: block;
-  }
-
   .main-content-scroll {
     overflow: visible;
     padding-top: 0;

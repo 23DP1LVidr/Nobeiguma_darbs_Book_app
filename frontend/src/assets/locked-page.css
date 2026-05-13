@@ -1,0 +1,150 @@
+html.app-page-locked,
+body.app-page-locked {
+  height: 100%;
+  overflow: hidden !important;
+}
+
+body.app-page-locked #app,
+body.app-page-locked .v-application,
+body.app-page-locked .v-application__wrap,
+body.app-page-locked .v-main {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.locked-page {
+  height: 100vh;
+  height: 100dvh;
+  background: rgb(var(--v-theme-background));
+  color: rgb(var(--v-theme-on-background));
+  overflow: hidden;
+}
+
+.locked-page__content {
+  height: calc(100vh - 64px);
+  height: calc(100dvh - 64px);
+  background: rgb(var(--v-theme-background));
+  overflow: hidden;
+}
+
+.locked-page__shell {
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.locked-page__row {
+  height: 100%;
+  min-height: 0;
+}
+
+.locked-page__scroll {
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 32px;
+  scrollbar-gutter: stable;
+}
+
+.locked-page__scroll--framed {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 0;
+}
+
+.locked-page__side {
+  align-self: flex-start;
+  position: sticky;
+  top: 24px;
+  max-height: calc(100vh - 48px);
+  max-height: calc(100dvh - 48px);
+  overflow: hidden;
+}
+
+@media (max-width: 959px) {
+  html.app-page-locked,
+  body.app-page-locked {
+    height: auto;
+    min-height: 100%;
+    overflow: visible !important;
+  }
+
+  body.app-page-locked #app,
+  body.app-page-locked .v-application,
+  body.app-page-locked .v-application__wrap,
+  body.app-page-locked .v-main {
+    height: auto;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+
+  .locked-page,
+  .locked-page__content {
+    height: auto;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+
+  .locked-page__shell,
+  .locked-page__row {
+    height: auto;
+  }
+
+  .locked-page__scroll,
+  .locked-page__scroll--framed {
+    height: auto;
+    overflow: visible;
+    display: block;
+  }
+
+  html.app-page-locked.app-page-lock-mobile,
+  body.app-page-locked.app-page-lock-mobile {
+    height: 100%;
+    overflow: hidden !important;
+  }
+
+  body.app-page-locked.app-page-lock-mobile #app,
+  body.app-page-locked.app-page-lock-mobile .v-application,
+  body.app-page-locked.app-page-lock-mobile .v-application__wrap,
+  body.app-page-locked.app-page-lock-mobile .v-main {
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  body.app-page-lock-mobile .locked-page {
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  body.app-page-lock-mobile .locked-page__content {
+    height: calc(100vh - 64px);
+    height: calc(100dvh - 64px);
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  body.app-page-lock-mobile .locked-page__shell,
+  body.app-page-lock-mobile .locked-page__row {
+    height: 100%;
+    min-height: 0;
+  }
+
+  body.app-page-lock-mobile .locked-page__scroll,
+  body.app-page-lock-mobile .locked-page__scroll--framed {
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    padding-bottom: 0;
+  }
+
+  body.app-page-lock-mobile .locked-page__scroll--framed {
+    display: flex;
+    flex-direction: column;
+  }
+}

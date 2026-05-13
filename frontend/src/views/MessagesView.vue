@@ -1,18 +1,18 @@
 <template>
-  <div class="messages-page">
+  <div class="locked-page">
     <AppHeader :user="user" :initials="initials" />
 
-    <v-container fluid class="pa-0 page-content">
-      <v-container class="py-6 messages-shell" style="max-width: 1200px;">
-        <v-row class="messages-layout-row">
-          <v-col cols="12" md="3" class="d-none d-md-block sidebar-col">
+    <v-container fluid class="pa-0 locked-page__content">
+      <v-container class="py-6 locked-page__shell" style="max-width: 1200px;">
+        <v-row class="locked-page__row">
+          <v-col cols="12" md="3" class="d-none d-md-block locked-page__side">
             <AppSidebar :user="user" :initials="initials" @logout="logoutUser" />
           </v-col>
 
           <v-col
             cols="12"
             md="6"
-            class="messages-scroll-col"
+            class="locked-page__scroll locked-page__scroll--framed"
             :class="{ 'd-none d-md-flex': !selectedChat }"
           >
             <MessageChatPanel
@@ -30,7 +30,7 @@
           <v-col
             cols="12"
             md="3"
-            class="messages-side-col"
+            class="messages-side-col locked-page__side"
             :class="{ 'd-none d-md-block': selectedChat }"
           >
             <ConversationListPanel
@@ -57,6 +57,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import axios from "axios"
 import { API_URL } from "@/services/api"
+import { usePageLock } from "@/composables/usePageLock"
 import AppHeader from "@/components/layout/AppHeader.vue"
 import AppSidebar from "@/components/layout/AppSidebar.vue"
 import ConversationListPanel from "@/components/messages/ConversationListPanel.vue"
@@ -64,6 +65,8 @@ import MessageChatPanel from "@/components/messages/MessageChatPanel.vue"
 
 const router = useRouter()
 const route = useRoute()
+
+usePageLock({ lockMobile: true })
 
 const user = ref(JSON.parse(localStorage.getItem("user")) || null)
 const search = ref("")
@@ -94,9 +97,6 @@ const filteredChats = computed(() => {
 })
 
 onMounted(async () => {
-  document.documentElement.classList.add("messages-page-locked")
-  document.body.classList.add("messages-page-locked")
-
   await fetchChats()
   await selectInitialChat()
 
@@ -112,9 +112,6 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
-  document.documentElement.classList.remove("messages-page-locked")
-  document.body.classList.remove("messages-page-locked")
-
   if (messagesInterval) clearInterval(messagesInterval)
   if (chatsInterval) clearInterval(chatsInterval)
 })
@@ -283,91 +280,10 @@ function showMessage(message, color = "success") {
 </script>
 
 <style scoped>
-:global(html.messages-page-locked),
-:global(body.messages-page-locked) {
-  height: 100%;
-  overflow: hidden !important;
-}
-
-:global(body.messages-page-locked #app),
-:global(body.messages-page-locked .v-application),
-:global(body.messages-page-locked .v-application__wrap),
-:global(body.messages-page-locked .v-main) {
-  height: 100%;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.messages-page {
-  height: 100vh;
-  background: rgb(var(--v-theme-background));
-  color: rgb(var(--v-theme-on-background));
-  overflow: hidden;
-}
-
-.page-content {
-  height: calc(100vh - 64px);
-  background: rgb(var(--v-theme-background));
-  overflow: hidden;
-}
-
-.messages-shell {
-  height: 100%;
-  box-sizing: border-box;
-}
-
-.messages-layout-row {
-  height: 100%;
-  min-height: 0;
-}
-
-.messages-scroll-col {
-  height: 100%;
-  min-height: 0;
-  overflow-y: auto;
-  padding-bottom: 32px;
-  scrollbar-gutter: stable;
-  display: flex;
-  flex-direction: column;
-}
-
-.sidebar-col,
-.messages-side-col {
-  align-self: flex-start;
-  position: sticky;
-  top: 24px;
-  max-height: calc(100vh - 48px);
-  overflow: hidden;
-}
-
 @media (max-width: 959px) {
-  :global(html.messages-page-locked),
-  :global(body.messages-page-locked) {
-    height: auto;
-    overflow: visible !important;
-  }
-
-  .messages-page,
-  .page-content {
-    height: calc(100vh - 64px);
-    min-height: 100vh;
-    overflow: hidden;
-  }
-
-  .messages-scroll-col {
-    height: 100%;
-    overflow: hidden;
-    padding-bottom: 0;
-  }
-
-  .messages-shell,
-  .messages-layout-row,
   .messages-side-col {
     height: 100%;
     min-height: 0;
-  }
-
-  .messages-side-col {
     max-height: none;
     overflow-y: auto;
     position: static;

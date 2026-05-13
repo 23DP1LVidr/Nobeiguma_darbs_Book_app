@@ -105,6 +105,7 @@
   import { useRouter } from "vue-router"
   import axios from "axios"
   import { API_URL } from "@/services/api"
+  import { setLoggedInUser } from "@/stores/userStore"
 
   const router = useRouter()
 
@@ -145,10 +146,12 @@
 
   const usernameError = computed(() => {
     if (!touched.username) return ""
-    if (!username.value.trim()) return "Lietotājvārds ir obligāts."
-    if (username.value.length < 4) return "Lietotājvārdam jābūt vismaz 4 simboliem."
-    if (!/^[a-z0-9._]+$/.test(username.value)) {
-      return "Atļauti tikai mazie burti, cipari, punkti un apakšsvītras."
+    const normalizedUsername = username.value.trim().toLowerCase()
+
+    if (!normalizedUsername) return "Lietotājvārds ir obligāts."
+    if (normalizedUsername.length < 4) return "Lietotājvārdam jābūt vismaz 4 simboliem."
+    if (!/^[a-z0-9._]+$/.test(normalizedUsername)) {
+      return "Atļauti tikai burti, cipari, punkti un apakšsvītras."
     }
     return ""
   })
@@ -208,16 +211,19 @@
     loading.value = true
 
     try {
+      const normalizedUsername = username.value.trim().toLowerCase()
+
       const response = await axios.post(`${API_URL}/register`, {
         name: name.value,
         surname: surname.value,
-        username: username.value,
+        username: normalizedUsername,
         email: email.value,
         password: password.value,
       })
 
       localStorage.setItem("token", response.data.token)
       localStorage.setItem("user", JSON.stringify(response.data.user))
+      setLoggedInUser(response.data.user)
 
       router.push("/main")
     } catch (err) {

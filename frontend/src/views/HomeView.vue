@@ -1,244 +1,605 @@
 <template>
-  <v-container fluid class="hero-section pa-0">
-    <!-- Navigation Bar -->
-    <v-app-bar flat color="transparent" class="px-8">
-      <v-toolbar-title class="text-h5 font-weight-bold text-primary">BookSwap</v-toolbar-title>
-      
-      <v-spacer></v-spacer>
-      
-      <v-btn variant="text" class="mr-2" href="/home">Sākums</v-btn>
-      <v-btn variant="text" class="mr-2" href="/about">Par mums</v-btn>
-      <v-btn variant="text" class="mr-4" href="/register">Reģistrēties</v-btn>
-      <v-btn color="primary" variant="flat" href="/register">Sākt</v-btn>
+  <div class="home-page">
+    <v-app-bar flat height="72" color="transparent" class="home-nav px-4 px-md-8">
+      <router-link to="/home" class="brand-link">
+        <div class="brand-mark">B</div>
+        <span class="brand-text">BookSwap</span>
+      </router-link>
+
+      <v-spacer />
+
+      <div class="d-none d-md-flex align-center nav-links">
+        <v-btn variant="text" to="/home">Sākums</v-btn>
+        <v-btn variant="text" to="/main">Plūsma</v-btn>
+      </div>
+
+      <v-btn variant="text" to="/login" class="ml-2">Pieteikties</v-btn>
+      <v-btn color="primary" variant="flat" to="/register" class="ml-2">
+        Sākt
+      </v-btn>
     </v-app-bar>
 
-    <!-- Hero Section -->
-    <v-container class="py-16">
-      <v-row justify="center" align="center">
-        <v-col cols="12" md="10" class="text-center">
-          
-          <v-chip color="primary" variant="tonal" class="mb-6" size="small">
-            📚 Grāmatu apmaiņas platforma #1 Latvijā
-          </v-chip>
+    <main>
+      <section class="hero-section">
+        <v-container class="hero-container">
+          <v-row align="center" class="hero-grid">
+            <v-col cols="12" lg="6">
+              <v-chip color="primary" variant="tonal" class="mb-5" size="small">
+                Grāmatu apmaiņas platforma Latvijā
+              </v-chip>
 
-          <h1 class="hero-title mb-6">
-            Atklāj jaunas grāmatas,<br>
-            <span class="text-primary">satiec lasītājus</span>
-          </h1>
+              <h1 class="hero-title">
+                Maini grāmatas. Atklāj lasītājus. Veido savu bibliotēku.
+              </h1>
 
-          <p class="hero-subtitle mb-8">
-            BookSwap ir moderna sociālā platforma grāmatu lasītājiem. 
-            Maini grāmatas, sazinies ar citiem lasītājiem un veido savu 
-            personīgo bibliotēku — viss vienā vietā.
-          </p>
+              <p class="hero-subtitle">
+                BookSwap apvieno personīgo bibliotēku, grāmatu apmaiņu,
+                sociālo plūsmu un ziņas vienā ērtā vietā.
+              </p>
 
-          <div class="d-flex justify-center gap-4 flex-wrap">
-            <v-btn color="primary" size="large" elevation="4" href="/register">
-              <v-icon start>mdi-account-plus</v-icon>
-              Reģistrēties bezmaksas
-            </v-btn>
-            <v-btn variant="outlined" size="large" href="/about" color="primary">
-              <v-icon start>mdi-information</v-icon>
-              Uzzināt vairāk
+              <div class="hero-actions">
+                <v-btn color="primary" size="large" to="/register">
+                  <v-icon start>mdi-account-plus</v-icon>
+                  Reģistrēties bez maksas
+                </v-btn>
+
+                <v-btn variant="outlined" color="primary" size="large" to="/main">
+                  <v-icon start>mdi-newspaper</v-icon>
+                  Apskatīt plūsmu
+                </v-btn>
+              </div>
+
+              <div class="trust-row">
+                <div>
+                  <strong>500+</strong>
+                  <span>grāmatas</span>
+                </div>
+                <div>
+                  <strong>120+</strong>
+                  <span>lasītāji</span>
+                </div>
+                <div>
+                  <strong>50+</strong>
+                  <span>apmaiņas</span>
+                </div>
+              </div>
+            </v-col>
+
+            <v-col cols="12" lg="6">
+              <div class="product-preview">
+                <div class="preview-topbar">
+                  <div class="preview-dot" />
+                  <div class="preview-dot" />
+                  <div class="preview-dot" />
+                  <span>BookSwap</span>
+                </div>
+
+                <div class="preview-layout">
+                  <aside class="preview-sidebar">
+                    <div class="preview-user">
+                      <div class="preview-avatar">AK</div>
+                      <div>
+                        <div class="preview-name">Anna Kalniņa</div>
+                        <div class="preview-muted">@annalasa</div>
+                      </div>
+                    </div>
+                    <div class="preview-nav active">Sākums</div>
+                    <div class="preview-nav">Mana bibliotēka</div>
+                    <div class="preview-nav">Ziņas</div>
+                  </aside>
+
+                  <section class="preview-feed">
+                    <div class="preview-card">
+                      <div class="preview-card-title">1984</div>
+                      <div class="preview-muted">Džordžs Orvels</div>
+                      <p>
+                        Meklēju maiņu pret latviešu klasiku. Grāmata labā stāvoklī.
+                      </p>
+                      <div class="preview-tags">
+                        <span>Distopija</span>
+                        <span>Labā stāvoklī</span>
+                      </div>
+                    </div>
+
+                    <div class="preview-card compact">
+                      <div>
+                        <div class="preview-card-title">Staburags</div>
+                        <div class="preview-muted">12 meklējumi šonedēļ</div>
+                      </div>
+                      <v-icon color="primary">mdi-trending-up</v-icon>
+                    </div>
+                  </section>
+                </div>
+              </div>
+            </v-col>
+          </v-row>
+        </v-container>
+      </section>
+
+      <section class="features-section">
+        <v-container>
+          <div class="section-heading">
+            <h2>Viss grāmatu apmaiņai vienā sistēmā</h2>
+            <p>BookSwap nav tikai katalogs. Tā ir darba vide lasītājiem.</p>
+          </div>
+
+          <v-row>
+            <v-col v-for="feature in features" :key="feature.title" cols="12" md="4">
+              <div class="feature-card">
+                <div class="feature-icon">
+                  <v-icon>{{ feature.icon }}</v-icon>
+                </div>
+                <h3>{{ feature.title }}</h3>
+                <p>{{ feature.text }}</p>
+              </div>
+            </v-col>
+          </v-row>
+        </v-container>
+      </section>
+
+      <section class="steps-section">
+        <v-container>
+          <v-row align="center">
+            <v-col cols="12" md="5">
+              <h2 class="section-title">Kā tas strādā</h2>
+              <p class="section-copy">
+                Process ir vienkāršs: pievieno savas grāmatas, atrodi citu
+                piedāvājumus un vienojies par apmaiņu ziņās.
+              </p>
+            </v-col>
+
+            <v-col cols="12" md="7">
+              <div class="steps-list">
+                <div v-for="step in steps" :key="step.title" class="step-item">
+                  <div class="step-number">{{ step.number }}</div>
+                  <div>
+                    <h3>{{ step.title }}</h3>
+                    <p>{{ step.text }}</p>
+                  </div>
+                </div>
+              </div>
+            </v-col>
+          </v-row>
+        </v-container>
+      </section>
+
+      <section class="cta-section">
+        <v-container>
+          <div class="cta-panel">
+            <div>
+              <h2>Sāc mainīt grāmatas jau šodien</h2>
+              <p>Pievieno pirmās grāmatas un atrodi lasītājus savā pilsētā.</p>
+            </div>
+            <v-btn color="primary" size="large" to="/register">
+              Izveidot kontu
             </v-btn>
           </div>
-        </v-col>
-      </v-row>
+        </v-container>
+      </section>
+    </main>
 
-      <!-- Stats Section -->
-      <v-row justify="center" class="mt-12">
-        <v-col cols="6" sm="3" class="text-center">
-          <div class="stat-number">500+</div>
-          <div class="stat-label">Grāmatas</div>
-        </v-col>
-        <v-col cols="6" sm="3" class="text-center">
-          <div class="stat-number">120+</div>
-          <div class="stat-label">Lietotāji</div>
-        </v-col>
-        <v-col cols="6" sm="3" class="text-center">
-          <div class="stat-number">50+</div>
-          <div class="stat-label">Apmainītas</div>
-        </v-col>
-        <v-col cols="6" sm="3" class="text-center">
-          <div class="stat-number">10</div>
-          <div class="stat-label">Pilsētas</div>
-        </v-col>
-      </v-row>
-    </v-container>
-
-    <!-- Features Section -->
-    <v-container class="py-16 features-section">
-      <v-row justify="center">
-        <v-col cols="12" class="text-center mb-12">
-          <h2 class="section-title mb-4">Kāpēc izmantot BookSwap?</h2>
-          <p class="section-text">Viss, kas nepieciešams grāmatu apmaiņai, vienuviet</p>
-        </v-col>
-      </v-row>
-
-      <v-row>
-        <v-col cols="12" md="4">
-          <v-card class="feature-card pa-6" elevation="2" rounded="xl" height="100%">
-            <v-avatar color="primary" variant="tonal" size="60" class="mb-4">
-              <v-icon size="30" color="primary">mdi-bookshelf</v-icon>
-            </v-avatar>
-            <h3 class="text-h6 font-weight-bold mb-2">Personīgā bibliotēka</h3>
-            <p class="text-body-2 text-medium-emphasis">
-              Pievieno visas savas grāmatas digitālajā bibliotēkā. 
-              Seko līdzi savam krājumam jebkurā laikā.
-            </p>
-          </v-card>
-        </v-col>
-
-        <v-col cols="12" md="4">
-          <v-card class="feature-card pa-6" elevation="2" rounded="xl" height="100%">
-            <v-avatar color="secondary" variant="tonal" size="60" class="mb-4">
-              <v-icon size="30" color="secondary">mdi-swap-horizontal</v-icon>
-            </v-avatar>
-            <h3 class="text-h6 font-weight-bold mb-2">Vienkārša apmaiņa</h3>
-            <p class="text-body-2 text-medium-emphasis">
-              Atrodi citus lasītājus savā apkārtnē un apmaini grāmatas 
-              tikai ar dažiem klikšķiem.
-            </p>
-          </v-card>
-        </v-col>
-
-        <v-col cols="12" md="4">
-          <v-card class="feature-card pa-6" elevation="2" rounded="xl" height="100%">
-            <v-avatar color="tertiary" variant="tonal" size="60" class="mb-4">
-              <v-icon size="30" color="tertiary">mdi-account-group</v-icon>
-            </v-avatar>
-            <h3 class="text-h6 font-weight-bold mb-2">Lasītāju kopiena</h3>
-            <p class="text-body-2 text-medium-emphasis">
-              Sazinies ar citiem grāmatmīļiem, dalies ar iespaidiem 
-              un atklāj jaunas grāmatas kopā.
-            </p>
-          </v-card>
-        </v-col>
-      </v-row>
-    </v-container>
-
-    <!-- CTA Section -->
-    <v-container class="py-16 cta-section">
-      <v-row justify="center">
-        <v-col cols="12" md="8" class="text-center">
-          <h2 class="cta-title mb-4">Gatavs sākt?</h2>
-          <p class="cta-text mb-8">
-            Pievieno savas grāmatas jau šodien un sāc apmainīties ar citiem lasītājiem visā Latvijā.
-          </p>
-          <v-btn color="white" size="x-large" elevation="8" href="/register" class="text-primary">
-            <v-icon start>mdi-rocket-launch</v-icon>
-            Reģistrēties tagad
-          </v-btn>
-        </v-col>
-      </v-row>
-    </v-container>
-
-    <!-- Footer -->
-    <v-footer color="grey-darken-4" class="py-8">
-      <v-container>
-        <v-row>
-          <v-col cols="12" md="4">
-            <div class="text-h6 font-weight-bold text-primary mb-2">BookSwap</div>
-            <p class="text-body-2 text-grey">Moderna platforma grāmatu apmaiņai Latvijā.</p>
-          </v-col>
-          <v-col cols="6" md="4">
-            <div class="text-subtitle-2 font-weight-bold mb-2">Saite</div>
-            <div class="d-flex flex-column">
-              <a href="/home" class="text-grey text-decoration-none">Sākums</a>
-              <a href="/about" class="text-grey text-decoration-none">Par mums</a>
-              <a href="/register" class="text-grey text-decoration-none">Reģistrācija</a>
-            </div>
-          </v-col>
-          <v-col cols="6" md="4">
-            <div class="text-subtitle-2 font-weight-bold mb-2">Kontakts</div>
-            <p class="text-grey text-body-2">info@bookswap.lv</p>
-          </v-col>
-        </v-row>
-        <v-divider class="my-4"></v-divider>
-        <div class="text-center text-grey">
+    <v-footer class="home-footer">
+      <v-container class="d-flex flex-column flex-md-row align-center justify-space-between">
+        <div class="font-weight-bold">BookSwap</div>
+        <div class="text-body-2 text-medium-emphasis">
           © 2026 BookSwap. Visas tiesības rezervētas.
         </div>
       </v-container>
     </v-footer>
-  </v-container>
+  </div>
 </template>
 
 <script setup>
+import { onBeforeUnmount, onMounted } from "vue"
+import { useTheme } from "vuetify"
+
+const theme = useTheme()
+let previousTheme = "light"
+
+const features = [
+  {
+    icon: "mdi-bookshelf",
+    title: "Personīgā bibliotēka",
+    text: "Pievieno grāmatas, norādi žanru, stāvokli un attēlu. Viss pārskatāmi vienā vietā.",
+  },
+  {
+    icon: "mdi-swap-horizontal",
+    title: "Droša apmaiņa",
+    text: "Sūti apmaiņas pieprasījumus un seko statusam no gaidoša līdz pabeigtam.",
+  },
+  {
+    icon: "mdi-message-text",
+    title: "Ziņas un kopiena",
+    text: "Vienojies par detaļām, komentē ierakstus un atrodi aktīvus lasītājus.",
+  },
+]
+
+const steps = [
+  {
+    number: "01",
+    title: "Izveido profilu",
+    text: "Reģistrējies un papildini profilu ar pilsētu un īsu aprakstu.",
+  },
+  {
+    number: "02",
+    title: "Pievieno grāmatas",
+    text: "Norādi, kuras grāmatas esi gatavs mainīt ar citiem lietotājiem.",
+  },
+  {
+    number: "03",
+    title: "Sāc apmaiņu",
+    text: "Atrodi interesējošu grāmatu un nosūti apmaiņas pieprasījumu.",
+  },
+]
+
+onMounted(() => {
+  previousTheme = theme.global.name.value
+  theme.global.name.value = "light"
+})
+
+onBeforeUnmount(() => {
+  theme.global.name.value = previousTheme
+})
 </script>
 
 <style scoped>
-.hero-section {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+.home-page {
   min-height: 100vh;
+  color: #172033;
+  background: #f6f8fb;
+}
+
+.home-nav {
+  border-bottom: 1px solid rgba(23, 32, 51, 0.08);
+  backdrop-filter: blur(18px);
+}
+
+.brand-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.brand-mark {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  color: #ffffff;
+  font-weight: 800;
+  place-items: center;
+  border-radius: 10px;
+  background: #1976d2;
+}
+
+.brand-text {
+  color: #172033;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.nav-links {
+  gap: 4px;
+}
+
+.hero-section {
+  min-height: 760px;
+  padding-top: 72px;
+  background:
+    radial-gradient(circle at 80% 10%, rgba(25, 118, 210, 0.16), transparent 34%),
+    linear-gradient(180deg, #ffffff 0%, #f6f8fb 100%);
+}
+
+.hero-container {
+  padding-top: 72px;
+  padding-bottom: 72px;
+}
+
+.hero-grid {
+  min-height: 560px;
 }
 
 .hero-title {
-  font-size: clamp(36px, 6vw, 64px);
-  font-weight: 800;
-  letter-spacing: -1px;
-  line-height: 1.1;
+  max-width: 720px;
+  margin: 0;
+  color: #101828;
+  font-size: clamp(42px, 6vw, 72px);
+  font-weight: 900;
+  letter-spacing: 0;
+  line-height: 1.02;
 }
 
-.hero-subtitle {
-  font-size: clamp(16px, 2vw, 20px);
-  color: #6e6e73;
-  max-width: 700px;
-  margin: 0 auto;
+.hero-subtitle,
+.section-copy {
+  max-width: 620px;
+  margin-top: 24px;
+  color: #596579;
+  font-size: 19px;
+  line-height: 1.7;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 34px;
+}
+
+.trust-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 28px;
+  margin-top: 42px;
+}
+
+.trust-row div {
+  display: grid;
+  gap: 2px;
+}
+
+.trust-row strong {
+  color: #101828;
+  font-size: 28px;
+}
+
+.trust-row span {
+  color: #667085;
+  font-size: 14px;
+}
+
+.product-preview {
+  overflow: hidden;
+  border: 1px solid rgba(23, 32, 51, 0.1);
+  border-radius: 24px;
+  background: #ffffff;
+  box-shadow: 0 28px 80px rgba(16, 24, 40, 0.14);
+}
+
+.preview-topbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 52px;
+  padding: 0 18px;
+  color: #667085;
+  border-bottom: 1px solid rgba(23, 32, 51, 0.08);
+}
+
+.preview-topbar span {
+  margin-left: 10px;
+  font-weight: 700;
+}
+
+.preview-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #d0d5dd;
+}
+
+.preview-layout {
+  display: grid;
+  grid-template-columns: 190px 1fr;
+  min-height: 420px;
+}
+
+.preview-sidebar {
+  padding: 20px;
+  background: #f8fafc;
+  border-right: 1px solid rgba(23, 32, 51, 0.08);
+}
+
+.preview-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.preview-avatar {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+  place-items: center;
+  border-radius: 50%;
+  background: #1976d2;
+}
+
+.preview-name,
+.preview-card-title {
+  color: #101828;
+  font-weight: 800;
+}
+
+.preview-muted {
+  color: #667085;
+  font-size: 13px;
+}
+
+.preview-nav {
+  padding: 10px 12px;
+  color: #475467;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.preview-nav.active {
+  color: #101828;
+  background: #e8f2ff;
+}
+
+.preview-feed {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+  padding: 24px;
+}
+
+.preview-card {
+  padding: 20px;
+  border: 1px solid rgba(23, 32, 51, 0.08);
+  border-radius: 18px;
+  background: #ffffff;
+}
+
+.preview-card.compact {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.preview-card p {
+  color: #475467;
   line-height: 1.6;
 }
 
-.stat-number {
-  font-size: 36px;
-  font-weight: 800;
-  color: #1976d2;
+.preview-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
-.stat-label {
-  font-size: 14px;
-  color: #6e6e73;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.section-title {
-  font-size: clamp(28px, 4vw, 36px);
+.preview-tags span {
+  padding: 6px 10px;
+  color: #175cd3;
+  border-radius: 999px;
+  background: #eff8ff;
+  font-size: 13px;
   font-weight: 700;
 }
 
-.section-text {
+.features-section,
+.steps-section,
+.cta-section {
+  padding: 90px 0;
+  background: #ffffff;
+}
+
+.steps-section {
+  background: #f6f8fb;
+}
+
+.section-heading {
+  max-width: 720px;
+  margin: 0 auto 42px;
+  text-align: center;
+}
+
+.section-heading h2,
+.section-title,
+.cta-panel h2 {
+  color: #101828;
+  font-size: clamp(30px, 4vw, 44px);
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.section-heading p,
+.cta-panel p {
+  margin-top: 12px;
+  color: #667085;
   font-size: 18px;
-  color: #6e6e73;
 }
 
 .feature-card {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  height: 100%;
+  padding: 28px;
+  border: 1px solid rgba(23, 32, 51, 0.08);
+  border-radius: 22px;
+  background: #ffffff;
+  box-shadow: 0 12px 30px rgba(16, 24, 40, 0.06);
 }
 
-.feature-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 20px 40px rgba(0,0,0,0.12) !important;
+.feature-icon {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  margin-bottom: 20px;
+  color: #1976d2;
+  place-items: center;
+  border-radius: 16px;
+  background: #e8f2ff;
 }
 
-.features-section {
-  background: white;
+.feature-card h3,
+.step-item h3 {
+  margin-bottom: 10px;
+  color: #101828;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.feature-card p,
+.step-item p {
+  color: #667085;
+  line-height: 1.65;
+}
+
+.steps-list {
+  display: grid;
+  gap: 16px;
+}
+
+.step-item {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: 18px;
+  padding: 24px;
+  border: 1px solid rgba(23, 32, 51, 0.08);
+  border-radius: 20px;
+  background: #ffffff;
+}
+
+.step-number {
+  color: #1976d2;
+  font-size: 24px;
+  font-weight: 900;
 }
 
 .cta-section {
-  background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+  padding-top: 40px;
 }
 
-.cta-title {
-  font-size: 36px;
-  font-weight: 700;
-  color: white;
+.cta-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 36px;
+  border-radius: 24px;
+  background: #eef6ff;
 }
 
-.cta-text {
-  font-size: 18px;
-  color: rgba(255,255,255,0.9);
+.home-footer {
+  padding: 28px 0;
+  border-top: 1px solid rgba(23, 32, 51, 0.08);
+  background: #ffffff;
 }
 
-.gap-4 {
-  gap: 16px;
+@media (max-width: 959px) {
+  .hero-section {
+    min-height: auto;
+  }
+
+  .hero-container {
+    padding-top: 48px;
+  }
+
+  .preview-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .preview-sidebar {
+    display: none;
+  }
+
+  .cta-panel {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 }
 </style>

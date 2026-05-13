@@ -1,15 +1,15 @@
 <template>
-  <div class="profile-page">
+  <div class="locked-page">
     <AppHeader :user="currentUser" :initials="currentInitials" />
 
-    <v-container fluid class="pa-0 page-content">
-      <v-container class="py-6 profile-shell" style="max-width: 1200px;">
-        <v-row class="profile-layout-row">
-          <v-col cols="12" md="3" class="d-none d-md-block sidebar-col">
+    <v-container fluid class="pa-0 locked-page__content">
+      <v-container class="py-6 locked-page__shell" style="max-width: 1200px;">
+        <v-row class="locked-page__row">
+          <v-col cols="12" md="3" class="d-none d-md-block locked-page__side">
             <AppSidebar :user="currentUser" :initials="currentInitials" @logout="logoutUser" />
           </v-col>
 
-          <v-col cols="12" md="6" class="profile-scroll-col">
+          <v-col cols="12" md="6" class="locked-page__scroll">
             <div v-if="loading" class="text-center py-10">
               <v-progress-circular indeterminate color="primary" />
             </div>
@@ -122,7 +122,7 @@
             </template>
           </v-col>
 
-          <v-col cols="12" md="3" class="d-none d-md-block sidebar-col">
+          <v-col cols="12" md="3" class="d-none d-md-block locked-page__side">
             <v-card rounded="xl" elevation="0" class="pa-4 mb-4 panel-card">
               <div class="text-subtitle-1 font-weight-bold mb-3">Profila informācija</div>
 
@@ -144,15 +144,18 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue"
+import { computed, onMounted, ref, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import axios from "axios"
 import { API_URL } from "@/services/api"
+import { usePageLock } from "@/composables/usePageLock"
 import AppHeader from "@/components/layout/AppHeader.vue"
 import AppSidebar from "@/components/layout/AppSidebar.vue"
 
 const route = useRoute()
 const router = useRouter()
+
+usePageLock()
 
 const currentUser = ref(JSON.parse(localStorage.getItem("user")) || null)
 const profileUser = ref(null)
@@ -183,14 +186,7 @@ function logoutUser() {
 }
 
 onMounted(() => {
-  document.documentElement.classList.add("profile-page-locked")
-  document.body.classList.add("profile-page-locked")
   fetchUserProfile()
-})
-
-onBeforeUnmount(() => {
-  document.documentElement.classList.remove("profile-page-locked")
-  document.body.classList.remove("profile-page-locked")
 })
 
 watch(
@@ -242,60 +238,6 @@ async function openChat() {
 </script>
 
 <style scoped>
-.profile-page {
-  height: 100vh;
-  background: rgb(var(--v-theme-background));
-  color: rgb(var(--v-theme-on-background));
-  overflow: hidden;
-}
-
-.page-content {
-  height: calc(100vh - 64px);
-  background: rgb(var(--v-theme-background));
-  overflow: hidden;
-}
-
-:global(html.profile-page-locked),
-:global(body.profile-page-locked) {
-  height: 100%;
-  overflow: hidden !important;
-}
-
-:global(body.profile-page-locked #app),
-:global(body.profile-page-locked .v-application),
-:global(body.profile-page-locked .v-application__wrap),
-:global(body.profile-page-locked .v-main) {
-  height: 100%;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.profile-shell {
-  height: 100%;
-  box-sizing: border-box;
-}
-
-.profile-layout-row {
-  height: 100%;
-  min-height: 0;
-}
-
-.profile-scroll-col {
-  height: 100%;
-  min-height: 0;
-  overflow-y: auto;
-  padding-bottom: 32px;
-  scrollbar-gutter: stable;
-}
-
-.sidebar-col {
-  align-self: flex-start;
-  position: sticky;
-  top: 24px;
-  max-height: calc(100vh - 48px);
-  overflow: hidden;
-}
-
 .panel-card,
 .content-card,
 .book-card,
@@ -326,23 +268,4 @@ async function openChat() {
   gap: 8px;
 }
 
-@media (max-width: 959px) {
-  :global(html.profile-page-locked),
-  :global(body.profile-page-locked) {
-    height: auto;
-    overflow: visible !important;
-  }
-
-  .profile-page,
-  .page-content {
-    height: auto;
-    min-height: 100vh;
-    overflow: visible;
-  }
-
-  .profile-scroll-col {
-    height: auto;
-    overflow: visible;
-  }
-}
 </style>

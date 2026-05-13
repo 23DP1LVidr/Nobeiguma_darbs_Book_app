@@ -63,17 +63,34 @@
             </div>
           </div>
         </div>
+
+        <div v-else class="exchange-preview-item empty-offer">
+          <div class="text-body-2 text-medium-emphasis mb-2">
+            Jūs piedāvājat:
+          </div>
+
+          <div class="empty-offer-box">
+            <v-icon color="primary" size="32">mdi-hand-heart-outline</v-icon>
+            <div>
+              <div class="text-subtitle-2 font-weight-bold">Bez pretgrāmatas</div>
+              <div class="text-caption text-medium-emphasis">
+                Pieprasījums tiks nosūtīts bez grāmatas piedāvājuma.
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <v-select
         v-model="selectedOfferedBookId"
         :items="myBookOptions"
-        label="Izvēlieties grāmatu, ko piedāvāt"
+        label="Grāmata, ko piedāvāt"
         variant="outlined"
         item-title="title"
         item-value="id"
         class="mb-4"
-        clearable
+        hint="Vari nosūtīt pieprasījumu arī bez pretgrāmatas."
+        persistent-hint
       />
 
       <div class="d-flex justify-end">
@@ -115,12 +132,18 @@ const emit = defineEmits(["update:modelValue", "submit"])
 
 const selectedOfferedBookId = ref(null)
 
-const myBookOptions = computed(() => {
-  return props.myBooks.map((book) => ({
-    id: book.id,
-    title: `${book.title} — ${book.author}`,
-  }))
-})
+const myBookOptions = computed(() => [
+  {
+    id: null,
+    title: "Nepiedāvāt grāmatu",
+  },
+  ...props.myBooks
+    .filter((book) => book.is_available !== false)
+    .map((book) => ({
+      id: book.id,
+      title: `${book.title} — ${book.author}`,
+    })),
+])
 
 const selectedOfferedBook = computed(() => {
   return props.myBooks.find((book) => book.id === selectedOfferedBookId.value) || null
@@ -144,7 +167,7 @@ function close() {
 }
 
 function submit() {
-  emit("submit", selectedOfferedBookId.value)
+  emit("submit", selectedOfferedBookId.value || null)
 }
 </script>
 
@@ -179,9 +202,35 @@ function submit() {
   background: rgba(var(--v-theme-on-surface), 0.06);
 }
 
+.empty-offer {
+  align-self: stretch;
+}
+
+.empty-offer-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 115px;
+  padding: 14px;
+  border: 1px dashed rgba(var(--v-theme-primary), 0.45);
+  border-radius: 8px;
+  background: rgba(var(--v-theme-primary), 0.08);
+}
+
 .content-card {
   background: rgb(var(--v-theme-surface)) !important;
   color: rgb(var(--v-theme-on-surface)) !important;
   border: 1px solid rgba(var(--v-theme-on-surface), 0.08);
+}
+
+@media (max-width: 599px) {
+  .exchange-preview {
+    grid-template-columns: 1fr;
+  }
+
+  .exchange-arrow {
+    margin: 0;
+    transform: rotate(90deg);
+  }
 }
 </style>

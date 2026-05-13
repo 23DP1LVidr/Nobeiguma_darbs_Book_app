@@ -34,12 +34,6 @@ const router = createRouter({
       component: () => import('../views/MessagesView.vue'),
     },
     {
-      path: '/about',
-      name: 'about',
-      component: () => import('../views/AboutView.vue'),
-      meta: { public: true },
-    },
-    {
       path: '/register',
       name: 'register',
       component: () => import('../views/Register.vue'),
