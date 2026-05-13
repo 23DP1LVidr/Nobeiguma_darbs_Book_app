@@ -28,6 +28,7 @@
 
     <div class="d-flex justify-end mt-3 gap-2">
       <v-file-input
+        ref="imageInput"
         v-model="imageFile"
         accept="image/*"
         class="d-none"
@@ -259,6 +260,7 @@ const emit = defineEmits(["create", "toggle-like", "comment", "delete-post", "de
 
 const newPost = ref("")
 const imageFile = ref(null)
+const imageInput = ref(null)
 const imagePreview = ref(null)
 const commentDrafts = ref({})
 const openComments = ref({})
@@ -292,7 +294,7 @@ watch(imageFile, (file) => {
 })
 
 function openImagePicker() {
-  const input = document.querySelector(".v-file-input input[type='file']")
+  const input = imageInput.value?.$el?.querySelector("input[type='file']")
   input?.click()
 }
 

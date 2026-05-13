@@ -65,6 +65,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue"
 import axios from "axios"
+import { API_URL } from "@/services/api"
 
 const props = defineProps({
   user: {
@@ -76,8 +77,6 @@ const props = defineProps({
     default: "U",
   },
 })
-
-const API_URL = "http://127.0.0.1:8000/api"
 
 const conversations = ref([])
 const exchanges = ref([])

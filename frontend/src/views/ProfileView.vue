@@ -203,6 +203,7 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue"
 import { useRouter } from "vue-router"
 import axios from "axios"
+import { API_URL } from "@/services/api"
 import AppHeader from "@/components/layout/AppHeader.vue"
 import AppSidebar from "@/components/layout/AppSidebar.vue"
 
@@ -211,8 +212,6 @@ const snackbarMessage = ref("")
 const snackbarColor = ref("success")
 
 const router = useRouter()
-
-const API_URL = "http://127.0.0.1:8000/api"
 
 const user = ref(JSON.parse(localStorage.getItem("user")) || null)
 const books = ref([])
@@ -292,7 +291,7 @@ async function saveProfile() {
     const token = localStorage.getItem("token")
 
     const response = await axios.put(
-      "http://127.0.0.1:8000/api/profile",
+      `${API_URL}/profile`,
       {
         name: editForm.name,
         surname: editForm.surname,

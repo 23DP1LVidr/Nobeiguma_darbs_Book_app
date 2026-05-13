@@ -52,6 +52,7 @@ import { ref } from "vue"
 import { useRouter } from "vue-router"
 import axios from "axios"
 import { setLoggedInUser } from "@/stores/userStore"
+import { API_URL } from "@/services/api"
 
 const router = useRouter()
 
@@ -67,14 +68,13 @@ async function onSubmit() {
   loading.value = true
 
   try {
-    const response = await axios.post("http://127.0.0.1:8000/api/login", {
+    const response = await axios.post(`${API_URL}/login`, {
       login: login.value,
       password: password.value,
     })
 
     localStorage.setItem("token", response.data.token)
     localStorage.setItem("user", JSON.stringify(response.data.user))
-    localStorage.setItem("token", response.data.token)
     setLoggedInUser(response.data.user)
 
     router.replace("/main")

@@ -1,5 +1,5 @@
 ﻿<template>
-  <div class="main-page">
+  <div ref="mainPage" class="main-page">
     <AppHeader :user="userState.user" :initials="initials" />
 
     <v-container fluid class="pa-0 page-content">
@@ -124,6 +124,8 @@ import { computed, onBeforeUnmount, ref, onMounted, watch } from "vue"
 import axios from "axios"
 import { useRouter } from "vue-router"
 import { userState, initials, logout } from "@/stores/userStore"
+import { API_URL } from "@/services/api"
+import { useScrollForwarding } from "@/composables/useScrollForwarding"
 import AppHeader from "@/components/layout/AppHeader.vue"
 import AppSidebar from "@/components/layout/AppSidebar.vue"
 import FeedTab from "@/components/main/FeedTab.vue"
@@ -132,12 +134,17 @@ import ExchangeRequestDialog from "@/components/main/ExchangeRequestDialog.vue"
 import MainRightSidebar from "@/components/main/MainRightSidebar.vue"
 
 const router = useRouter()
+const mainPage = ref(null)
+const mainContentScroll = ref(null)
+
+useScrollForwarding({
+  source: mainPage,
+  target: mainContentScroll,
+})
 
 function handleLogout() {
   logout(router)
 }
-
-const API_URL = "http://127.0.0.1:8000/api"
 
 function authHeaders() {
   return {
@@ -159,32 +166,10 @@ function requireAuth() {
 }
 
 const showProfileReminder = ref(false)
-const mainContentScroll = ref(null)
 
 onMounted(() => {
   document.documentElement.classList.add("main-page-locked")
   document.body.classList.add("main-page-locked")
-
-  // Add global scroll listener to allow scrolling from any part of the page
-  const handleWheel = (event) => {
-    // Skip if the event target is inside scrollable elements that should handle their own scrolling
-    if (event.target.closest('.v-menu, .v-dialog, .v-overlay, .v-select__menu, .v-autocomplete__menu')) {
-      return
-    }
-
-    // Prevent default page scrolling
-    event.preventDefault()
-
-    // Scroll the main content area instead
-    if (mainContentScroll.value) {
-      mainContentScroll.value.scrollTop += event.deltaY
-    }
-  }
-
-  document.addEventListener('wheel', handleWheel, { passive: false })
-
-  // Store the listener for cleanup
-  window.mainPageWheelListener = handleWheel
 
   fetchPosts()
   if (!isGuest.value) {
@@ -205,12 +190,6 @@ onMounted(() => {
 onBeforeUnmount(() => {
   document.documentElement.classList.remove("main-page-locked")
   document.body.classList.remove("main-page-locked")
-
-  // Clean up the global scroll listener
-  if (window.mainPageWheelListener) {
-    document.removeEventListener('wheel', window.mainPageWheelListener)
-    window.mainPageWheelListener = null
-  }
 })
 const activeTab = ref("feed")
 

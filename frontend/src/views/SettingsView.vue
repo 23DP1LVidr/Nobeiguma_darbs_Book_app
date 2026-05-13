@@ -146,6 +146,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue"
 import axios from "axios"
 import { useTheme } from "vuetify"
 import { useRouter } from "vue-router"
+import { API_URL } from "@/services/api"
 import AppHeader from "@/components/layout/AppHeader.vue"
 import AppSidebar from "@/components/layout/AppSidebar.vue"
 import { logout } from "@/stores/userStore"
@@ -155,7 +156,6 @@ const vuetifyTheme = useTheme()
 
 const user = ref(JSON.parse(localStorage.getItem("user")) || null)
 const selectedTheme = ref("light")
-const API_URL = "http://127.0.0.1:8000/api"
 
 const passwordForm = ref({
   current_password: "",

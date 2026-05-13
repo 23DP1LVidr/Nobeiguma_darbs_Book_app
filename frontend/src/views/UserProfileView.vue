@@ -147,13 +147,12 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import axios from "axios"
+import { API_URL } from "@/services/api"
 import AppHeader from "@/components/layout/AppHeader.vue"
 import AppSidebar from "@/components/layout/AppSidebar.vue"
 
 const route = useRoute()
 const router = useRouter()
-
-const API_URL = "http://127.0.0.1:8000/api"
 
 const currentUser = ref(JSON.parse(localStorage.getItem("user")) || null)
 const profileUser = ref(null)

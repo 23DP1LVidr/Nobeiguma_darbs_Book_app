@@ -192,6 +192,12 @@ class ExchangeController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
+        if ($exchange->status !== 'pending') {
+            return response()->json([
+                'message' => 'Var noraidīt tikai gaidošu apmaiņas pieprasījumu.',
+            ], 422);
+        }
+
         $exchange->update([
             'status' => 'rejected',
         ]);
@@ -215,6 +221,12 @@ class ExchangeController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
+        if ($exchange->status !== 'accepted') {
+            return response()->json([
+                'message' => 'Var pabeigt tikai aktīvu apmaiņu.',
+            ], 422);
+        }
+
         $exchange->update([
             'status' => 'completed',
         ]);
@@ -236,6 +248,12 @@ class ExchangeController extends Controller
             $exchange->requester_id !== $request->user()->id
         ) {
             return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        if ($exchange->status !== 'pending') {
+            return response()->json([
+                'message' => 'Var atcelt tikai gaidošu apmaiņas pieprasījumu.',
+            ], 422);
         }
 
         if ($exchange->conversation) {

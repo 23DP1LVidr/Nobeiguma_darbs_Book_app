@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import axios from 'axios'
+import { API_URL } from '@/services/api'
 import HomeView from '../views/HomeView.vue'
 
 const router = createRouter({
@@ -78,7 +79,7 @@ const router = createRouter({
 })
 
 async function fetchCurrentUser(token) {
-  const response = await axios.get("http://127.0.0.1:8000/api/me", {
+  const response = await axios.get(`${API_URL}/me`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },

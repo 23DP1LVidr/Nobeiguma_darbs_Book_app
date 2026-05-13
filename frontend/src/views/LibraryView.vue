@@ -1,5 +1,5 @@
 <template>
-  <div class="library-page">
+  <div ref="libraryPage" class="library-page">
     <AppHeader :user="user" :initials="initials" />
 
     <v-container fluid class="pa-0 page-content">
@@ -9,7 +9,7 @@
             <AppSidebar :user="user" :initials="initials" @logout="logoutUser" />
           </v-col>
 
-          <v-col cols="12" md="6" class="library-scroll-col">
+          <v-col ref="libraryScroll" cols="12" md="6" class="library-scroll-col">
             <LibraryBooksSection
               :books="books"
               :loading="loadingBooks"
@@ -53,6 +53,8 @@
 import { computed, onBeforeUnmount, onMounted, ref } from "vue"
 import axios from "axios"
 import { useRouter } from "vue-router"
+import { API_URL } from "@/services/api"
+import { useScrollForwarding } from "@/composables/useScrollForwarding"
 import AppHeader from "@/components/layout/AppHeader.vue"
 import AppSidebar from "@/components/layout/AppSidebar.vue"
 import BookFormDialog from "@/components/library/BookFormDialog.vue"
@@ -60,6 +62,13 @@ import LibraryActivitySidebar from "@/components/library/LibraryActivitySidebar.
 import LibraryBooksSection from "@/components/library/LibraryBooksSection.vue"
 
 const router = useRouter()
+const libraryPage = ref(null)
+const libraryScroll = ref(null)
+
+useScrollForwarding({
+  source: libraryPage,
+  target: libraryScroll,
+})
 
 const user = ref(JSON.parse(localStorage.getItem("user")) || null)
 
@@ -74,8 +83,6 @@ function logoutUser() {
   localStorage.removeItem("user")
   router.replace("/login")
 }
-
-const API_URL = "http://127.0.0.1:8000/api"
 
 function authHeaders() {
   return {
@@ -120,40 +127,12 @@ onMounted(() => {
   document.documentElement.classList.add("library-page-locked")
   document.body.classList.add("library-page-locked")
 
-  // Add global scroll listener to allow scrolling from any part of the page
-  const handleWheel = (event) => {
-    // Skip if the event target is inside scrollable elements that should handle their own scrolling
-    if (event.target.closest('.v-menu, .v-dialog, .v-overlay, .v-select__menu, .v-autocomplete__menu')) {
-      return
-    }
-
-    // Prevent default page scrolling
-    event.preventDefault()
-
-    // Scroll the library content area instead
-    const scrollElement = document.querySelector('.library-scroll-col')
-    if (scrollElement) {
-      scrollElement.scrollTop += event.deltaY
-    }
-  }
-
-  document.addEventListener('wheel', handleWheel, { passive: false })
-
-  // Store the listener for cleanup
-  window.libraryPageWheelListener = handleWheel
-
   fetchBooks()
 })
 
 onBeforeUnmount(() => {
   document.documentElement.classList.remove("library-page-locked")
   document.body.classList.remove("library-page-locked")
-
-  // Clean up the global scroll listener
-  if (window.libraryPageWheelListener) {
-    document.removeEventListener('wheel', window.libraryPageWheelListener)
-    window.libraryPageWheelListener = null
-  }
 })
 
 async function fetchBooks() {

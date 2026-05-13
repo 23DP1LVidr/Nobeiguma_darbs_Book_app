@@ -56,6 +56,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import axios from "axios"
+import { API_URL } from "@/services/api"
 import AppHeader from "@/components/layout/AppHeader.vue"
 import AppSidebar from "@/components/layout/AppSidebar.vue"
 import ConversationListPanel from "@/components/messages/ConversationListPanel.vue"
@@ -63,8 +64,6 @@ import MessageChatPanel from "@/components/messages/MessageChatPanel.vue"
 
 const router = useRouter()
 const route = useRoute()
-
-const API_URL = "http://127.0.0.1:8000/api"
 
 const user = ref(JSON.parse(localStorage.getItem("user")) || null)
 const search = ref("")

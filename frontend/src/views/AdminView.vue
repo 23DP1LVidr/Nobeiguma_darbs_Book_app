@@ -145,8 +145,7 @@
 <script setup>
 import { computed, onMounted, ref } from "vue"
 import axios from "axios"
-
-const API_URL = "http://127.0.0.1:8000/api"
+import { API_URL } from "@/services/api"
 
 const user = ref(JSON.parse(localStorage.getItem("user")) || null)
 const selectedNav = ref(["dashboard"])

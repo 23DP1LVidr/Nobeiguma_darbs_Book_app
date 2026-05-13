@@ -74,6 +74,10 @@
             required
           />
 
+          <div v-if="error" class="text-error mb-3">
+            {{ error }}
+          </div>
+
           <v-btn
             type="submit"
             color="primary"
@@ -100,6 +104,7 @@
   import { ref, reactive, computed } from "vue"
   import { useRouter } from "vue-router"
   import axios from "axios"
+  import { API_URL } from "@/services/api"
 
   const router = useRouter()
 
@@ -110,6 +115,7 @@
   const password = ref("")
   const passwordConfirm = ref("")
   const loading = ref(false)
+  const error = ref("")
 
   const showPassword = ref(false)
   const showPasswordConfirm = ref(false)
@@ -198,10 +204,11 @@
 
     if (!formIsValid.value) return
 
+    error.value = ""
     loading.value = true
 
     try {
-      const response = await axios.post("http://127.0.0.1:8000/api/register", {
+      const response = await axios.post(`${API_URL}/register`, {
         name: name.value,
         surname: surname.value,
         username: username.value,
@@ -213,15 +220,15 @@
       localStorage.setItem("user", JSON.stringify(response.data.user))
 
       router.push("/main")
-    } catch (error) {
-      if (error.response?.status === 422) {
-        const errors = error.response.data.errors
+    } catch (err) {
+      if (err.response?.status === 422) {
+        const errors = err.response.data.errors
 
-        if (errors?.email) alert(errors.email[0])
-        else if (errors?.username) alert(errors.username[0])
-        else alert("Pārbaudi ievadītos datus.")
+        if (errors?.email) error.value = errors.email[0]
+        else if (errors?.username) error.value = errors.username[0]
+        else error.value = "Pārbaudi ievadītos datus."
       } else {
-        alert("Reģistrācija neizdevās.")
+        error.value = "Reģistrācija neizdevās."
       }
     } finally {
       loading.value = false
